@@ -1,4 +1,9 @@
-"
+"""
+Multi agent CCRRT implimentation
+Author : Yash Bagla (yashbagla321@gmail.com)
+
+Please cite us if you're using this resource
+"""
 
 import matplotlib.pyplot as plt
 import random
