@@ -1,4 +1,4 @@
-
+"
 
 import matplotlib.pyplot as plt
 import random
@@ -40,8 +40,6 @@ class RRT():
     def Planning(self, animation=True):
         """
         Pathplanning
-
-        animation: flag for animation on or off
         """
 
         self.nodeList = [self.start]
@@ -227,6 +225,9 @@ class Node():
         
         
 def LazyCollisionCheckRobot(node, nearestNode, obstacleRobot, p_safe):
+    """
+    Lazy Check
+    """
            
     for (ox, oy, size) in obstacleRobot:
         pnt = (ox, oy)
