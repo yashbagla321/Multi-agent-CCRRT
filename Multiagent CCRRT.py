@@ -5,12 +5,11 @@ Author : Yash Bagla (yashbagla321@gmail.com)
 Please cite us if you're using this resource
 """
 
+
+import random
 import math
 import copy
 import matplotlib.pyplot as plt
-import random
-
-
 
 show_animation = True
 
@@ -46,6 +45,8 @@ class RRT():
     def Planning(self, animation=True):
         """
         Pathplanning
+
+        animation: flag for animation on or off
         """
 
         self.nodeList = [self.start]
@@ -118,8 +119,8 @@ class RRT():
                 plt.plot([node.x, self.nodeList[node.parent].x], [
                           node.y, self.nodeList[node.parent].y], "bo", ms=30 * node.covariance)
                           
-        plt.plot(self.start.x, self.start.y, "xr")
-        plt.plot(self.end.x, self.end.y, "xg")
+        plt.plot(self.start.x, self.start.y, "xr", ms = 10)
+        plt.plot(self.end.x, self.end.y, "xg", ms = 10)
 
         for (ox, oy, size) in self.obstacleList:
             plt.plot(ox, oy, "ok", ms = 30 * size)
@@ -168,7 +169,7 @@ class RRT():
             if d <= ((size/2) + (p_safe * (node.covariance/2))):
                 return False  # collision
                 
-        return True  # safe
+        #return True  # safe
         #line segement intersect?        
         x1 = obstacleRobot[0][0]
         y1 = obstacleRobot[0][1]
@@ -231,9 +232,6 @@ class Node():
         
         
 def LazyCollisionCheckRobot(node, nearestNode, obstacleRobot, p_safe):
-    """
-    Lazy Check
-    """
            
     for (ox, oy, size) in obstacleRobot:
         pnt = (ox, oy)
@@ -243,16 +241,16 @@ def LazyCollisionCheckRobot(node, nearestNode, obstacleRobot, p_safe):
         if d <= ((size/2) + (p_safe * 0.2)):
             return False  # collision
                 
-    return True  # safe
+    #return True  # safe
     #line segement intersect?        
     x1 = obstacleRobot[0][0]
     y1 = obstacleRobot[0][1]
     x2 = obstacleRobot[1][0]
     y2 = obstacleRobot[1][1]
-    x3 = node.x
-    y3 = node.y
-    x4 = nearestNode.x
-    y4 = nearestNode.y
+    x3 = node[0]
+    y3 = node[1]
+    x4 = nearestNode[0]
+    y4 = nearestNode[1]
          
     
     num = (x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)
@@ -330,33 +328,32 @@ def main():
 
     # ====Search Path with RRT====
     obstacleList = [
-        (7, 5, 5),
-        (3, 6, 4),
-        (5, 10, 5),
-        (2, 2, 2),
-        (13, 10, 5)
+        (7, 4, 4),
+        (3, 6, 3),
+        (5, 10,4),
+            (13, 10, 4)
     ]  # [x,y,size]
-    start1 = [[1, 0, 0.2]]
-    start2 = [[0, 2, 0.2]]
-    goal2 = [[12, 2, 0.2]]
-    goal1 = [[3, 13, 0.2]]
+    start1 = [[4, 0, 0.2]]
+    start2 = [[2, 2, 0.2]]
+    goal2 = [[12, 0, 0.2]]
+    goal1 = [[0, 13, 0.2]]
     path_taken1 = []
     path_taken2 = []
     obstaclePathTaken = []
-    obstacleRobot1 = [(0, 2, 0.2),
-    (0, 2, 0.2)]
-    obstacleRobot2 = [(1, 0, 0.2),
-    (1, 0, 0.2)]
+    obstacleRobot1 = [(2, 2, 0.2),
+    (2, 2, 0.2)]
+    obstacleRobot2 = [(4, 0, 0.2),
+    (4, 0, 0.2)]
     
-    obstaclePath = [[10, 0, 0.2], [10, 1, 0.5971967999999999], 
-    [10, 2, 0.4976639999999999], 
-    [10, 3, 0.4147199999999999], 
-    [10, 4, 0.34559999999999996], 
-    [10, 5, 0.288], [10, 6, 0.24], 
-    [10, 7, 0.2], [10 , 8, 0.2],
-    [10, 9, 0.2], [10, 10, 0.2],
-    [10, 11, 0.2], [10, 12, 0.2]]
-    obstacleObstacle = [(10, 12, 0.2), (10, 11, 0.2)]
+    obstaclePath = [[10, 0, 0.2], [10, 1, 0.4], 
+    [10, 2, 0.4], 
+    [10, 3, 0.4], 
+    [10, 4, 0.4], 
+    [10, 5, 0.4], [10, 6, 0.4], 
+    [10, 7, 0.4], [10 , 8, 0.4],
+    [10, 9, 0.4], [10, 10, 0.4],
+    [10, 11, 0.4], [10, 12, 0.4]]
+    obstacleObstacle = [(10, 12, 0.4), (10, 11, 0.4)]
     # Set Initial parameters
     
     rrt = RRT(p_safe = 0.8, start = (start1[0][0], start1[0][1]), goal = goal1[0],
@@ -459,7 +456,7 @@ def main():
             
         obstacleObstacle.pop(0)
         
-        if len(obstaclePath) > 2:
+        if len(obstaclePath) > 1:
             obstaclePathTaken.append(obstaclePath[len(obstaclePath) - 1])
             obstaclePath.pop((len(obstaclePath) - 1))
             obstacleObstacle.append((obstaclePath[len(obstaclePath) - 2][0], obstaclePath[len(obstaclePath) - 2][1], 
@@ -480,9 +477,9 @@ def main():
         plt.plot([x for (x, y, cost) in path_taken2], [y for (x, y, cost) in path_taken2], 'go', ms = 30 * 0.2)
         plt.plot([x for (x, y, cost) in path_taken1], [y for (x, y, cost) in path_taken1], '-b', ms = 30 * 0.2)
         plt.plot([x for (x, y, cost) in path_taken2], [y for (x, y, cost) in path_taken2], '-g', ms = 30 * 0.2)  
-        plt.plot([x for (x, y, cost) in obstaclePathTaken], [y for (x, y, cost) in obstaclePathTaken], '-m', ms = 30 * 0.2)  
+        plt.plot([x for (x, y, cost) in obstaclePathTaken], [y for (x, y, cost) in obstaclePathTaken], '-m', ms = 30 * 0.4)  
         plt.plot([x for (x, y, cost) in obstaclePathTaken], [y for (x, y, cost) in obstaclePathTaken], 'mo', 
-                        ms = 30 * 0.5)  
+                        ms = 30 * 0.4)  
         plt.grid(True)
         plt.show()
         
