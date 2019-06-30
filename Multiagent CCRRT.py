@@ -135,7 +135,7 @@ class RRT():
         plt.gca().set_aspect('equal', adjustable='box')
 
         plt.grid(True)
-        plt.pause(0.001)
+        plt.pause(0.001) #comment this line if you're only interested in final results
 
 
     def GetNearestListIndex(self, nodeList, rnd):
