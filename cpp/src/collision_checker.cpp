@@ -1,3 +1,14 @@
+/**
+ * @file collision_checker.cpp
+ * @brief Monte Carlo chance-constrained collision checking.
+ *
+ * Samples from the planning robot's Gaussian and estimates the fraction of
+ * samples that fall inside static obstacles or moving objects' alpha-confidence sets.
+ * Edge checks additionally reject geometric intersections with broadcast paths.
+ *
+ * @see ccrrt/collision_checker.hpp
+ */
+
 #include "ccrrt/collision_checker.hpp"
 
 #include "ccrrt/geometry.hpp"
@@ -27,12 +38,14 @@ bool MonteCarloCollisionChecker::sampleInCollision(
     const std::vector<TrajectoryPrediction>& agent_predictions,
     const std::vector<TrajectoryPrediction>& dynamic_predictions,
     int time_index) const {
+    // Static obstacles: sample inside disc => collision.
     for (const auto& obstacle : static_obstacles) {
         if (sample.distance(obstacle.center) <= obstacle.radius) {
             return true;
         }
     }
 
+    // Other agents: sample inside alpha-confidence set of predicted position.
     for (const auto& prediction : agent_predictions) {
         if (prediction.empty()) {
             continue;
@@ -42,6 +55,7 @@ bool MonteCarloCollisionChecker::sampleInCollision(
         }
     }
 
+    // Dynamic obstacles: same confidence-set test as agents.
     for (const auto& prediction : dynamic_predictions) {
         if (prediction.empty()) {
             continue;
@@ -68,6 +82,7 @@ bool MonteCarloCollisionChecker::edgeIntersectsPredictedPath(
         return false;
     }
 
+    // Reject if the candidate edge crosses any segment of the broadcast path.
     for (std::size_t i = start_index; i + 1 < prediction.nodes.size(); ++i) {
         if (segmentsIntersect(
                 edge_start,
@@ -122,6 +137,7 @@ bool MonteCarloCollisionChecker::isEdgeSafe(
     const std::vector<TrajectoryPrediction>& agent_predictions,
     const std::vector<TrajectoryPrediction>& dynamic_predictions,
     int time_index) const {
+    // 1. Chance constraint at the child node (paper: check probability at edge end).
     GaussianState endpoint;
     endpoint.mean = edge_end;
     endpoint.variance = robot_variance;
@@ -135,6 +151,7 @@ bool MonteCarloCollisionChecker::isEdgeSafe(
         return false;
     }
 
+    // 2. Geometric intersection with other agents' broadcast trajectories (Section 4.1).
     for (const auto& prediction : agent_predictions) {
         if (edgeIntersectsPredictedPath(edge_start, edge_end, prediction, time_index)) {
             return false;
@@ -147,6 +164,7 @@ bool MonteCarloCollisionChecker::isEdgeSafe(
         }
     }
 
+    // 3. Static obstacle segment clearance.
     for (const auto& obstacle : static_obstacles) {
         if (pointSegmentDistance(obstacle.center, edge_start, edge_end) <= obstacle.radius) {
             return false;

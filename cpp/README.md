@@ -56,10 +56,36 @@ cmake --build build --config Release
 ## Project layout
 
 ```
-include/ccrrt/     Public headers
+include/ccrrt/     Public headers (Doxygen-documented)
 src/               Core library implementation
 scenarios/         Paper figure scenario definitions
 main.cpp           CLI entry point
+ARCHITECTURE.md    System design, data flow, and paper mapping
+Doxyfile           API documentation generator config
+```
+
+See **[ARCHITECTURE.md](ARCHITECTURE.md)** for layer diagrams, end-to-end data flow, algorithm walkthroughs, and extension points.
+
+## Code documentation
+
+All public types and functions use **Doxygen** comments (`@brief`, `@param`, `@return`).
+Headers declare the API; `.cpp` files include `@file` blocks and inline notes for
+non-obvious logic (e.g. Algorithm 1/2 steps, collision-check stages).
+
+| Location | What is documented |
+|----------|-------------------|
+| `include/ccrrt/*.hpp` | Every struct field, class, and public/private method |
+| `src/*.cpp` | File purpose, helper functions, algorithm step comments |
+| `scenarios/` | Scenario factories and coordinate helpers |
+| `main.cpp` | CLI flow and exit codes |
+| `include/ccrrt/ccrrt.hpp` | Umbrella header + architecture overview |
+
+Generate HTML docs (requires [Doxygen](https://www.doxygen.nl/)):
+
+```powershell
+cd cpp
+doxygen Doxyfile
+# Open docs/doxygen/html/index.html
 ```
 
 ## Algorithm parameters (paper Section 5)

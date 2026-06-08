@@ -1,3 +1,10 @@
+/**
+ * @file trajectory_exporter.cpp
+ * @brief CSV and JSON export of simulation results.
+ *
+ * @see ccrrt/trajectory_exporter.hpp
+ */
+
 #include "ccrrt/trajectory_exporter.hpp"
 
 #include <filesystem>
@@ -10,6 +17,7 @@ namespace ccrrt {
 
 namespace {
 
+/** @brief Creates @p path and parent directories if they do not exist. */
 bool ensureDirectory(const std::string& path) {
     std::error_code error;
     std::filesystem::create_directories(path, error);

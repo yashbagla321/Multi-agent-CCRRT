@@ -1,3 +1,13 @@
+/**
+ * @file sfml_renderer.cpp
+ * @brief SFML-based 2D visualization of environments and executed trajectories.
+ *
+ * Only compiled when CCRRT_ENABLE_VISUALIZATION=ON and SFML is found.
+ * Coordinate system: y-axis is flipped so mathematical y-up maps to screen coordinates.
+ *
+ * @see ccrrt/sfml_renderer.hpp
+ */
+
 #include "ccrrt/sfml_renderer.hpp"
 
 #if CCRRT_HAS_SFML
@@ -6,18 +16,19 @@
 
 #include <SFML/Graphics.hpp>
 #include <cmath>
-#include <thread>
 #include <vector>
 
 namespace ccrrt {
 
 namespace {
 
+/** @brief Maps workspace coordinates to SFML screen pixels (y flipped). */
 sf::Vector2f toScreen(const Vec2& point, float scale, float offset) {
     return {static_cast<float>(point.x * scale + offset),
             static_cast<float>(offset - point.y * scale)};
 }
 
+/** @brief Draws a filled circle at workspace position @p center. */
 void drawDisc(
     sf::RenderWindow& window,
     const Vec2& center,
@@ -33,6 +44,7 @@ void drawDisc(
     window.draw(circle);
 }
 
+/** @brief Draws an alpha-confidence disc from isotropic variance. */
 void drawConfidenceDisc(
     sf::RenderWindow& window,
     const Vec2& center,

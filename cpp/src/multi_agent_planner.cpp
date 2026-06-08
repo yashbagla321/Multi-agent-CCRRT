@@ -1,3 +1,14 @@
+/**
+ * @file multi_agent_planner.cpp
+ * @brief Multi-agent receding-horizon CC-RRT simulation (paper Algorithms 1 & 2).
+ *
+ * Algorithm 1: priority-ordered initial planning with trajectory broadcast.
+ * Algorithm 2: per-step execution, Kalman update, lazy check, optional replan,
+ *              and dynamic obstacle prediction advance.
+ *
+ * @see ccrrt/multi_agent_planner.hpp
+ */
+
 #include "ccrrt/multi_agent_planner.hpp"
 
 #include <algorithm>
@@ -80,6 +91,7 @@ bool MultiAgentPlanner::planInitialTrajectories(
     std::vector<AgentRuntime>& agents,
     const Environment& environment,
     std::vector<TrajectoryPrediction>& dynamic_predictions) {
+    // Algorithm 1: each agent plans in priority order, seeing higher-priority broadcasts.
     for (auto& agent : agents) {
         const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
         Trajectory planned = planner_.plan(
@@ -133,6 +145,7 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
 
     std::vector<AgentRuntime> agents = initializeAgents(environment);
 
+    // Build dynamic obstacle predictions with growing variance along mean waypoints.
     std::vector<TrajectoryPrediction> dynamic_predictions;
     dynamic_predictions.reserve(environment.dynamic_obstacles.size());
     for (const auto& obstacle : environment.dynamic_obstacles) {
@@ -150,6 +163,7 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
     int timestep = 0;
     const int max_timesteps = 500;
 
+    // Algorithm 2: receding horizon execution loop.
     while (!allAgentsAtGoal(agents) && timestep < max_timesteps) {
         for (auto& agent : agents) {
             if (agent.at_goal) {
@@ -161,6 +175,7 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
                 continue;
             }
 
+            // Record executed step at current position.
             ExecutedStep step;
             step.agent_id = agent.spec.id;
             step.timestep = timestep;
@@ -168,6 +183,7 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
             step.variance = agent.state.variance;
             agent.executed.push_back(step);
 
+            // Navigate to next planned node; simulate GPS and Kalman update.
             const Vec2 next_position = agent.planned.nodes[1].position;
             const Vec2 measurement = kalman_.simulateMeasurement(next_position, rng_);
             agent.state.mean = next_position;
@@ -175,6 +191,7 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
 
             shiftTrajectory(agent.planned);
 
+            // Lazy check + optional replan if unsafe or shorter path found.
             const bool lazy_safe =
                 lazyCheck(agent, agents, environment.static_obstacles, dynamic_predictions);
             const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
@@ -203,6 +220,7 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
             }
         }
 
+        // Advance all dynamic obstacle predictions one timestep.
         for (auto& prediction : dynamic_predictions) {
             prediction = advancePrediction(prediction);
         }

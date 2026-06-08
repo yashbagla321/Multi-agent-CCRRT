@@ -1,9 +1,21 @@
+/**
+ * @file paper_figures.cpp
+ * @brief Implementation of paper Section 5 simulation scenarios.
+ *
+ * Coordinates are hand-tuned approximations of Figures 5–7 in a 17×17 workspace.
+ * Static obstacles are circular; dynamic obstacles follow vertical mean paths.
+ */
+
 #include "scenarios/paper_figures.hpp"
 
 namespace ccrrt {
 
 namespace {
 
+/**
+ * @brief Shared static layout used by all three figure scenarios.
+ * @return Environment with bounds and four circular static obstacles only.
+ */
 Environment baseEnvironment() {
     Environment env;
     env.bounds_min = -2.0;
@@ -17,6 +29,17 @@ Environment baseEnvironment() {
     return env;
 }
 
+/**
+ * @brief Generates equally spaced waypoints along a vertical line.
+ *
+ * Used to define the predictable mean trajectory of a dynamic obstacle.
+ *
+ * @param x Fixed x-coordinate of the vertical path.
+ * @param y_start Starting y (inclusive).
+ * @param y_end Ending y (inclusive).
+ * @param step Spacing between consecutive waypoints.
+ * @return Ordered waypoints from y_start toward y_end.
+ */
 std::vector<Vec2> verticalDynamicObstacle(double x, double y_start, double y_end, double step) {
     std::vector<Vec2> waypoints;
     if (y_end >= y_start) {
@@ -87,6 +110,7 @@ Environment makeFigure7Scenario() {
     env.agents[1].start = {15.0, 2.0};
     env.agents[1].goal = {2.0, 15.0};
 
+    // Dynamic obstacle moves downward, forcing blue to wait before crossing.
     env.dynamic_obstacles[0].waypoints = verticalDynamicObstacle(9.0, 15.0, 1.0, 1.0);
     return env;
 }

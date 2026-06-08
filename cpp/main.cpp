@@ -1,3 +1,11 @@
+/**
+ * @file main.cpp
+ * @brief Command-line entry point for multi-agent CC-RRT simulations.
+ *
+ * Parses CLI arguments, selects a paper scenario, runs MultiAgentPlanner,
+ * exports trajectories to CSV/JSON, and optionally opens an SFML result window.
+ */
+
 #include "ccrrt/config.hpp"
 #include "ccrrt/multi_agent_planner.hpp"
 #include "ccrrt/sfml_renderer.hpp"
@@ -9,6 +17,7 @@
 
 namespace {
 
+/** @brief Prints CLI usage help to stdout. */
 void printUsage() {
     std::cout << "Usage: multi_agent_ccrrt --scenario <figure5|figure6|figure7> [options]\n"
               << "Options:\n"
@@ -20,12 +29,17 @@ void printUsage() {
 
 }  // namespace
 
+/**
+ * @brief Program entry point.
+ * @return 0 on success, 1 on CLI/IO error, 2 if simulation did not reach all goals.
+ */
 int main(int argc, char* argv[]) {
     std::string scenario_name = "figure5";
     std::string output_directory;
     bool enable_visualization = true;
     ccrrt::PlannerConfig config;
 
+    // --- Parse command-line arguments ---
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
         if (arg == "--scenario" && i + 1 < argc) {
@@ -48,6 +62,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // --- Resolve scenario by name ---
     const auto scenarios = ccrrt::allScenarios();
     const ccrrt::ScenarioEntry* selected = nullptr;
     for (const auto& scenario : scenarios) {
@@ -67,10 +82,12 @@ int main(int argc, char* argv[]) {
         output_directory = "output/" + scenario_name;
     }
 
+    // --- Run simulation ---
     std::cout << "Running scenario: " << selected->name << '\n';
     ccrrt::MultiAgentPlanner planner(config);
     const ccrrt::SimulationResult result = planner.run(selected->environment, selected->name);
 
+    // --- Export results ---
     ccrrt::TrajectoryExporter exporter;
     if (!exporter.exportCsv(result, output_directory)) {
         return 1;

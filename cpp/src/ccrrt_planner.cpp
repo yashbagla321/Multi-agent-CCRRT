@@ -1,3 +1,13 @@
+/**
+ * @file ccrrt_planner.cpp
+ * @brief Single-agent Chance-Constrained RRT tree expansion and path extraction.
+ *
+ * Standard RRT loop with variance growth along tree depth and chance-constrained
+ * edge acceptance via ICollisionChecker.
+ *
+ * @see ccrrt/ccrrt_planner.hpp
+ */
+
 #include "ccrrt/ccrrt_planner.hpp"
 
 #include <algorithm>
@@ -92,6 +102,7 @@ Trajectory CCRRTPlanner::plan(
     int goal_parent = -1;
 
     for (int iter = 0; iter < config_.max_iterations; ++iter) {
+        // --- Sample: goal-biased or uniform over workspace ---
         Vec2 sample;
         if (percent(rng_) > config_.goal_sample_rate) {
             sample = {coord(rng_), coord(rng_)};
@@ -102,6 +113,7 @@ Trajectory CCRRTPlanner::plan(
         const int nearest = nearestNodeIndex(nodes, sample);
         const Vec2 new_position = steer(nodes[static_cast<std::size_t>(nearest)].position, sample);
 
+        // Tree depth from root determines prediction horizon for moving obstacles.
         int depth = 0;
         for (int index = nearest; index >= 0; index = nodes[static_cast<std::size_t>(index)].parent) {
             ++depth;
