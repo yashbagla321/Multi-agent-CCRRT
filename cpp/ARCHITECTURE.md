@@ -340,6 +340,7 @@ The design supports future work without rewriting the core:
 | Extension | How |
 |-----------|-----|
 | New scenarios | Add a factory in `paper_figures.cpp`, register in `allScenarios()` |
+| Preview scenarios without sim | `multi_agent_ccrrt --scenario figure5 --preview` (requires SFML) |
 | Different collision model | Implement `ICollisionChecker`, inject into `CCRRTPlanner` |
 | RRT* / Dubins-RRT | Replace or wrap `CCRRTPlanner` behind a common interface |
 | JSON/YAML scenarios | Build `Environment` from file in `main.cpp` instead of hardcoded factories |

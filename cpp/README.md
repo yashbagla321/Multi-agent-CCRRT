@@ -43,12 +43,38 @@ cmake --build build --config Release
 ./build/Release/multi_agent_ccrrt.exe --scenario figure7 --seed 42 --output output/figure7
 ```
 
+### Preview scenarios (no simulation)
+
+Visualize layouts from `scenarios/paper_figures.cpp` before running the planner.
+Requires SFML at build time.
+
+```powershell
+# Preview one scenario (static obstacles, starts, goals, dynamic obstacle path)
+./build/Release/multi_agent_ccrrt.exe --scenario figure5 --preview
+
+# Preview all three paper figures in sequence (close window to advance)
+./build/Release/multi_agent_ccrrt.exe --preview-all
+
+# List scenario names
+./build/Release/multi_agent_ccrrt.exe --list-scenarios
+```
+
+Preview window legend:
+- **Black discs** — static obstacles
+- **Filled colored circle** — agent start (with faint confidence disc)
+- **Colored ring** — agent goal
+- **Faint line** — start-to-goal hint (not the planned path)
+- **Magenta trail** — dynamic obstacle mean waypoints
+
 ### CLI options
 
 | Flag | Description |
 |------|-------------|
 | `--scenario` | `figure5`, `figure6`, or `figure7` |
-| `--no-viz` | Skip SFML window |
+| `--preview` | Show scenario layout only; skip simulation |
+| `--preview-all` | Preview all scenarios in sequence |
+| `--list-scenarios` | Print scenario names and exit |
+| `--no-viz` | Skip SFML window after simulation |
 | `--output <dir>` | CSV/JSON output directory |
 | `--seed <n>` | RNG seed |
 | `--mc-samples <n>` | Monte Carlo samples per collision check |

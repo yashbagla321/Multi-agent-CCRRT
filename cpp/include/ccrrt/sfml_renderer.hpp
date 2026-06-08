@@ -20,10 +20,19 @@ namespace ccrrt {
 class SFMLRenderer {
 public:
     /**
-     * @brief Displays the static environment layout (obstacles, starts, goals).
+     * @brief Displays a scenario layout without running the planner.
      *
-     * Useful for inspecting a scenario before running the planner.
+     * Draws static obstacles, agent start/goal pairs (with intended path hints),
+     * dynamic obstacle mean trajectories, and initial uncertainty discs.
+     * Close the window to exit.
      *
+     * @param environment Environment from paper_figures (or custom).
+     * @param scenario_name Optional title suffix for the window (e.g. "figure5").
+     */
+    void renderScenarioPreview(const Environment& environment, const std::string& scenario_name = "") const;
+
+    /**
+     * @brief Alias for renderScenarioPreview (legacy name).
      * @param environment Environment to draw.
      */
     void renderEnvironment(const Environment& environment) const;

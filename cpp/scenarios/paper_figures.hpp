@@ -30,6 +30,12 @@ struct ScenarioEntry {
 /**
  * @brief Returns all built-in paper scenarios for CLI selection.
  * @return Vector of {name, environment} entries for figure5, figure6, figure7.
+ *
+ * Preview without simulation:
+ * @code
+ * multi_agent_ccrrt --scenario figure5 --preview
+ * multi_agent_ccrrt --preview-all
+ * @endcode
  */
 std::vector<ScenarioEntry> allScenarios();
 

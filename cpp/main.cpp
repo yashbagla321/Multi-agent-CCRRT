@@ -21,11 +21,33 @@ namespace {
 void printUsage() {
     std::cout << "Usage: multi_agent_ccrrt --scenario <figure5|figure6|figure7> [options]\n"
               << "Options:\n"
-              << "  --no-viz           Disable SFML visualization\n"
+              << "  --preview          Visualize scenario layout only (no simulation)\n"
+              << "  --preview-all      Preview all scenarios in sequence (close window to advance)\n"
+              << "  --list-scenarios   Print available scenario names and exit\n"
+              << "  --no-viz           Disable SFML visualization after simulation\n"
               << "  --output <dir>     Output directory (default: output/<scenario>)\n"
               << "  --seed <n>         RNG seed (default: 42)\n"
               << "  --mc-samples <n>   Monte Carlo samples (default: 1000)\n";
 }
+
+/** @brief Resolves a scenario by name; returns nullptr if not found. */
+const ccrrt::ScenarioEntry* findScenario(const std::string& name) {
+    const auto scenarios = ccrrt::allScenarios();
+    for (const auto& scenario : scenarios) {
+        if (scenario.name == name) {
+            return &scenario;
+        }
+    }
+    return nullptr;
+}
+
+#if CCRRT_HAS_SFML
+/** @brief Opens SFML preview for one scenario (blocks until window closed). */
+void previewScenario(const ccrrt::ScenarioEntry& scenario) {
+    ccrrt::SFMLRenderer renderer;
+    renderer.renderScenarioPreview(scenario.environment, scenario.name);
+}
+#endif
 
 }  // namespace
 
@@ -37,6 +59,9 @@ int main(int argc, char* argv[]) {
     std::string scenario_name = "figure5";
     std::string output_directory;
     bool enable_visualization = true;
+    bool preview_only = false;
+    bool preview_all = false;
+    bool list_scenarios = false;
     ccrrt::PlannerConfig config;
 
     // --- Parse command-line arguments ---
@@ -44,6 +69,12 @@ int main(int argc, char* argv[]) {
         const std::string arg = argv[i];
         if (arg == "--scenario" && i + 1 < argc) {
             scenario_name = argv[++i];
+        } else if (arg == "--preview") {
+            preview_only = true;
+        } else if (arg == "--preview-all") {
+            preview_all = true;
+        } else if (arg == "--list-scenarios") {
+            list_scenarios = true;
         } else if (arg == "--no-viz") {
             enable_visualization = false;
         } else if (arg == "--output" && i + 1 < argc) {
@@ -62,20 +93,45 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // --- Resolve scenario by name ---
     const auto scenarios = ccrrt::allScenarios();
-    const ccrrt::ScenarioEntry* selected = nullptr;
-    for (const auto& scenario : scenarios) {
-        if (scenario.name == scenario_name) {
-            selected = &scenario;
-            break;
+
+    if (list_scenarios) {
+        std::cout << "Available scenarios:\n";
+        for (const auto& scenario : scenarios) {
+            std::cout << "  " << scenario.name << '\n';
         }
+        return 0;
     }
 
+    if (preview_all) {
+#if CCRRT_HAS_SFML
+        for (const auto& scenario : scenarios) {
+            previewScenario(scenario);
+        }
+        return 0;
+#else
+        std::cerr << "Preview requires SFML. Rebuild with -DCCRRT_ENABLE_VISUALIZATION=ON and SFML installed.\n";
+        return 1;
+#endif
+    }
+
+    const ccrrt::ScenarioEntry* selected = findScenario(scenario_name);
     if (selected == nullptr) {
         std::cerr << "Unknown scenario: " << scenario_name << '\n';
         printUsage();
         return 1;
+    }
+
+    // --- Preview mode: visualize paper_figures layout without running planner ---
+    if (preview_only) {
+#if CCRRT_HAS_SFML
+        previewScenario(*selected);
+        return 0;
+#else
+        std::cerr << "Preview requires SFML. Rebuild with -DCCRRT_ENABLE_VISUALIZATION=ON and SFML installed.\n";
+        std::cerr << "Scenario \"" << selected->name << "\" is defined in scenarios/paper_figures.cpp\n";
+        return 1;
+#endif
     }
 
     if (output_directory.empty()) {
