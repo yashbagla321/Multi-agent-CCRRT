@@ -1,6 +1,7 @@
 # Build outputs
 cpp/build/
 cpp/output/
+cpp/out/build/
 **/CMakeFiles/
 **/CMakeCache.txt
 
