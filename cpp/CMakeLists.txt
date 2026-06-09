@@ -22,6 +22,7 @@ add_library(ccrrt_core
     src/geometry.cpp
     src/kalman_filter.cpp
     src/collision_checker.cpp
+    src/legacy_collision_checker.cpp
     src/ccrrt_planner.cpp
     src/multi_agent_planner.cpp
     src/trajectory_exporter.cpp
@@ -51,6 +52,7 @@ endif()
 
 add_library(ccrrt_scenarios
     scenarios/paper_figures.cpp
+    scenarios/python_reference.cpp
     scenarios/performance_scenarios.cpp
     scenarios/scenarios.cpp
 )

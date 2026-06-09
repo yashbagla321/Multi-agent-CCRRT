@@ -19,7 +19,7 @@ namespace {
 
 void printUsage() {
     std::cout << "Usage: multi_agent_ccrrt --scenario <name> [options]\n"
-              << "\nPaper scenarios:    figure5, figure6, figure7\n"
+              << "\nPaper scenarios:    figure5, figure6, figure7, python_reference\n"
               << "Performance tests:    perf_cluttered, perf_four_agents, perf_narrow_passage,\n"
               << "                      perf_long_paths, perf_multi_dynamic, perf_stress\n"
               << "\nOptions:\n"
@@ -30,7 +30,8 @@ void printUsage() {
               << "  --no-viz           Disable SFML visualization after simulation\n"
               << "  --output <dir>     Output directory (default: output/<scenario>)\n"
               << "  --seed <n>         RNG seed (default: 42)\n"
-              << "  --mc-samples <n>   Monte Carlo samples (default: 1000)\n";
+              << "  --mc-samples <n>   Monte Carlo samples (default: 1000)\n"
+              << "  --python-compat    Use Multiagent CCRRT.py planner settings\n";
 }
 
 std::optional<ccrrt::ScenarioEntry> findScenario(const std::string& name) {
@@ -163,6 +164,7 @@ int main(int argc, char* argv[]) {
     bool list_scenarios = false;
     bool benchmark_all = false;
     ccrrt::PlannerConfig config;
+    bool python_compat = false;
 
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
@@ -185,6 +187,9 @@ int main(int argc, char* argv[]) {
             config.rng_seed = static_cast<unsigned int>(std::stoul(argv[++i]));
         } else if (arg == "--mc-samples" && i + 1 < argc) {
             config.mc_samples = std::stoi(argv[++i]);
+        } else if (arg == "--python-compat") {
+            config = ccrrt::pythonCompatPlannerConfig();
+            python_compat = true;
         } else if (arg == "--help" || arg == "-h") {
             printUsage();
             return 0;
@@ -238,6 +243,10 @@ int main(int argc, char* argv[]) {
 
     if (output_directory.empty()) {
         output_directory = "output/" + scenario_name;
+    }
+
+    if (python_compat) {
+        std::cout << "Python-compat mode: legacy collision, expand=1.0, max_iter=500\n";
     }
 
     return runSingleScenario(*selected, config, output_directory, enable_visualization);

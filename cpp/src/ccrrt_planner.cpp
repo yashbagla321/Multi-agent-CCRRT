@@ -121,8 +121,13 @@ Trajectory CCRRTPlanner::plan(
 
         RRTNode candidate;
         candidate.position = new_position;
-        candidate.variance =
-            nodes[static_cast<std::size_t>(nearest)].variance + config_.process_noise;
+        if (config_.use_legacy_collision) {
+            candidate.variance = nodes[static_cast<std::size_t>(nearest)].variance *
+                               (1.0 + config_.variance_growth_alpha);
+        } else {
+            candidate.variance =
+                nodes[static_cast<std::size_t>(nearest)].variance + config_.process_noise;
+        }
         candidate.parent = nearest;
         candidate.cost = nodeCost(candidate, static_obstacles);
 
@@ -154,7 +159,13 @@ Trajectory CCRRTPlanner::plan(
 
     TrajectoryNode goal_node;
     goal_node.position = goal;
-    goal_node.variance = nodes[static_cast<std::size_t>(goal_parent)].variance + config_.process_noise;
+    if (config_.use_legacy_collision) {
+        goal_node.variance = nodes[static_cast<std::size_t>(goal_parent)].variance *
+                             (1.0 + config_.variance_growth_alpha);
+    } else {
+        goal_node.variance =
+            nodes[static_cast<std::size_t>(goal_parent)].variance + config_.process_noise;
+    }
     goal_node.time_step = static_cast<int>(path.nodes.size());
     path.nodes.push_back(goal_node);
     return path;

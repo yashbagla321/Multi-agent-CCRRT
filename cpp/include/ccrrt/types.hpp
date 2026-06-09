@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -145,6 +146,14 @@ struct DynamicObstacleSpec {
 
     /** @brief Initial position variance at the first waypoint. */
     double initial_variance = 0.2;
+
+    /**
+     * @brief Optional per-waypoint variance (overrides initial_variance + process_noise).
+     *
+     * When non-empty, must match waypoints.size(). Used by python_reference to mirror
+     * Multiagent CCRRT.py obstaclePath variance schedule.
+     */
+    std::vector<double> variance_per_waypoint;
 };
 
 /**
@@ -266,6 +275,24 @@ inline TrajectoryPrediction makePredictionFromWaypoints(
         node.time_step = static_cast<int>(i);
         prediction.nodes.push_back(node);
         variance += process_noise;
+    }
+    return prediction;
+}
+
+/**
+ * @brief Builds a TrajectoryPrediction with explicit variance at each waypoint.
+ */
+inline TrajectoryPrediction makePredictionFromWaypointsWithVariances(
+    const std::vector<Vec2>& waypoints,
+    const std::vector<double>& variances) {
+    TrajectoryPrediction prediction;
+    const std::size_t count = std::min(waypoints.size(), variances.size());
+    for (std::size_t i = 0; i < count; ++i) {
+        TrajectoryNode node;
+        node.position = waypoints[i];
+        node.variance = variances[i];
+        node.time_step = static_cast<int>(i);
+        prediction.nodes.push_back(node);
     }
     return prediction;
 }

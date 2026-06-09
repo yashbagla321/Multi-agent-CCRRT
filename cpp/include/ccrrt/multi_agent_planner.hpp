@@ -11,6 +11,8 @@
 #include "ccrrt/kalman_filter.hpp"
 #include "ccrrt/types.hpp"
 
+#include <memory>
+
 namespace ccrrt {
 
 /**
@@ -86,7 +88,7 @@ private:
     PlannerConfig config_;
     std::mt19937 rng_;
     KalmanFilter kalman_;
-    MonteCarloCollisionChecker collision_checker_;
+    std::unique_ptr<ICollisionChecker> collision_checker_;
     CCRRTPlanner planner_;
 };
 

@@ -2,6 +2,7 @@
 
 #include "scenarios/paper_figures.hpp"
 #include "scenarios/performance_scenarios.hpp"
+#include "scenarios/python_reference.hpp"
 
 namespace ccrrt {
 
@@ -32,6 +33,10 @@ std::vector<ScenarioEntry> paperScenarios() {
         paperEntry("figure5", "Paper Fig. 5: 2 agents, 4 static, 1 dynamic", makeFigure5Scenario()),
         paperEntry("figure6", "Paper Fig. 6: priority / time-separated crossing", makeFigure6Scenario()),
         paperEntry("figure7", "Paper Fig. 7: zig-zag wait for dynamic obstacle", makeFigure7Scenario()),
+        paperEntry(
+            "python_reference",
+            "Multiagent CCRRT.py main() test: 2 agents, 4 static, 1 dynamic",
+            makePythonReferenceScenario()),
     };
 }
 

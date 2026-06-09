@@ -133,6 +133,29 @@ bool MonteCarloCollisionChecker::isEdgeSafe(
         }
     }
 
+    // 3. Reject edges that cross higher-priority broadcast segments (paper Section 4.1).
+    for (const auto& prediction : agent_predictions) {
+        if (prediction.nodes.size() < 2) {
+            continue;
+        }
+        const TrajectoryNode first = prediction.nodeAt(static_cast<std::size_t>(time_index));
+        const TrajectoryNode second = prediction.nodeAt(static_cast<std::size_t>(time_index + 1));
+        if (segmentsIntersect(edge_start, edge_end, first.position, second.position)) {
+            return false;
+        }
+    }
+
+    for (const auto& prediction : dynamic_predictions) {
+        if (prediction.nodes.size() < 2) {
+            continue;
+        }
+        const TrajectoryNode first = prediction.nodeAt(static_cast<std::size_t>(time_index));
+        const TrajectoryNode second = prediction.nodeAt(static_cast<std::size_t>(time_index + 1));
+        if (segmentsIntersect(edge_start, edge_end, first.position, second.position)) {
+            return false;
+        }
+    }
+
     return true;
 }
 

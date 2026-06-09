@@ -57,6 +57,39 @@ struct PlannerConfig {
 
     /** @brief Seed for reproducible Monte Carlo and RRT sampling. */
     unsigned int rng_seed = 42;
+
+    /**
+     * @brief Use deterministic checks from Multiagent CCRRT.py instead of Monte Carlo.
+     *
+     * Enables multiplicative variance growth (variance_growth_alpha) and legacy_p_safe.
+     */
+    bool use_legacy_collision = false;
+
+    /** @brief Safety factor in legacy mode (Python p_safe, default 0.8). */
+    double legacy_p_safe = 0.8;
+
+    /**
+     * @brief Multiplicative variance growth per tree edge in legacy mode.
+     *
+     * Python: covariance *= (1 + alpha) with alpha = 0.1.
+     */
+    double variance_growth_alpha = 0.1;
 };
+
+/** @brief Planner settings aligned with Multiagent CCRRT.py defaults. */
+inline PlannerConfig pythonCompatPlannerConfig() {
+    PlannerConfig config;
+    config.expand_distance = 1.0;
+    config.max_iterations = 500;
+    config.goal_sample_rate = 5;
+    config.initial_variance = 0.2;
+    config.bounds_min = -2.0;
+    config.bounds_max = 15.0;
+    config.use_legacy_collision = true;
+    config.legacy_p_safe = 0.8;
+    config.variance_growth_alpha = 0.1;
+    config.rng_seed = 42;
+    return config;
+}
 
 }  // namespace ccrrt

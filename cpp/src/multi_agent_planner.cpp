@@ -11,9 +11,12 @@
 
 #include "ccrrt/multi_agent_planner.hpp"
 
+#include "ccrrt/legacy_collision_checker.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <memory>
 
 namespace ccrrt {
 
@@ -21,8 +24,12 @@ MultiAgentPlanner::MultiAgentPlanner(PlannerConfig config)
     : config_(config),
       rng_(config.rng_seed),
       kalman_(config_),
-      collision_checker_(config_, rng_),
-      planner_(config_, collision_checker_, rng_) {}
+      collision_checker_(config.use_legacy_collision
+                               ? std::unique_ptr<ICollisionChecker>(
+                                     std::make_unique<LegacyPythonCollisionChecker>(config))
+                               : std::unique_ptr<ICollisionChecker>(
+                                     std::make_unique<MonteCarloCollisionChecker>(config, rng_))),
+      planner_(config_, *collision_checker_, rng_) {}
 
 std::vector<AgentRuntime> MultiAgentPlanner::initializeAgents(const Environment& environment) const {
     std::vector<AgentRuntime> agents;
@@ -146,7 +153,7 @@ bool MultiAgentPlanner::lazyCheck(
     const double variance = agent.planned.nodes[1].variance;
 
     const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
-    return collision_checker_.isEdgeSafe(
+    return collision_checker_->isEdgeSafe(
         edge_start,
         edge_end,
         variance,
@@ -176,10 +183,16 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
     std::vector<TrajectoryPrediction> dynamic_predictions;
     dynamic_predictions.reserve(environment.dynamic_obstacles.size());
     for (const auto& obstacle : environment.dynamic_obstacles) {
-        dynamic_predictions.push_back(makePredictionFromWaypoints(
-            obstacle.waypoints,
-            obstacle.initial_variance,
-            config_.process_noise));
+        if (!obstacle.variance_per_waypoint.empty()) {
+            dynamic_predictions.push_back(makePredictionFromWaypointsWithVariances(
+                obstacle.waypoints,
+                obstacle.variance_per_waypoint));
+        } else {
+            dynamic_predictions.push_back(makePredictionFromWaypoints(
+                obstacle.waypoints,
+                obstacle.initial_variance,
+                config_.process_noise));
+        }
     }
 
     if (!planInitialTrajectories(agents, environment, dynamic_predictions)) {
