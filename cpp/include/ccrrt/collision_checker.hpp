@@ -43,7 +43,7 @@ public:
      * @brief Checks whether an RRT edge is safe to add to the tree.
      *
      * Validates the endpoint node (Monte Carlo) and rejects edges that intersect
-     * static obstacles or other agents' broadcast paths (paper Section 4.1).
+     * static obstacle discs.
      *
      * @param edge_start Parent node position.
      * @param edge_end Candidate child node position.
@@ -137,14 +137,7 @@ private:
     /** @brief Tests membership in an object's alpha-confidence disc. */
     bool pointInsideConfidenceSet(const Vec2& sample, const TrajectoryNode& object) const;
 
-    /** @brief Returns true if an edge crosses any segment of a predicted path. */
-    bool edgeIntersectsPredictedPath(
-        const Vec2& edge_start,
-        const Vec2& edge_end,
-        const TrajectoryPrediction& prediction,
-        int time_index) const;
-
-    PlannerConfig config_;
+    const PlannerConfig& config_;
     std::mt19937& rng_;
     mutable std::normal_distribution<double> normal_;
 };

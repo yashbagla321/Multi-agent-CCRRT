@@ -38,6 +38,14 @@ struct PlannerConfig {
     /** @brief Process noise variance added per prediction step (diagonal of Pω; paper: 0.2). */
     double process_noise = 0.2;
 
+    /**
+     * @brief Cap on variance used for other agents / dynamic obstacle confidence discs.
+     *
+     * Prevents late-horizon prediction tubes from growing large enough to block the
+     * entire workspace during RRT planning (variance still grows uncapped on the ego tree).
+     */
+    double max_prediction_variance = 0.8;
+
     /** @brief Measurement noise variance (diagonal of Q; paper: 0.2). */
     double measurement_noise = 0.2;
 

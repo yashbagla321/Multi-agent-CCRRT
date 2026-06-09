@@ -87,7 +87,7 @@ private:
         const RRTNode& node,
         const std::vector<StaticObstacle>& static_obstacles) const;
 
-    PlannerConfig config_;
+    const PlannerConfig& config_;
     ICollisionChecker& collision_checker_;
     std::mt19937& rng_;
 };

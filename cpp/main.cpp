@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -32,13 +33,13 @@ void printUsage() {
               << "  --mc-samples <n>   Monte Carlo samples (default: 1000)\n";
 }
 
-const ccrrt::ScenarioEntry* findScenario(const std::string& name) {
+std::optional<ccrrt::ScenarioEntry> findScenario(const std::string& name) {
     for (const auto& scenario : ccrrt::allScenarios()) {
         if (scenario.name == name) {
-            return &scenario;
+            return scenario;
         }
     }
-    return nullptr;
+    return std::nullopt;
 }
 
 void printScenarioList() {
@@ -218,8 +219,8 @@ int main(int argc, char* argv[]) {
         return runBenchmarkAll(config, output_directory);
     }
 
-    const ccrrt::ScenarioEntry* selected = findScenario(scenario_name);
-    if (selected == nullptr) {
+    const std::optional<ccrrt::ScenarioEntry> selected = findScenario(scenario_name);
+    if (!selected.has_value()) {
         std::cerr << "Unknown scenario: " << scenario_name << '\n';
         printUsage();
         return 1;

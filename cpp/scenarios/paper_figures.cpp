@@ -8,7 +8,11 @@
 
 #include "scenarios/paper_figures.hpp"
 
+#include "scenarios/scenario_helpers.hpp"
+
 namespace ccrrt {
+
+using scenario_helpers::makeAgent;
 
 namespace {
 
@@ -59,59 +63,45 @@ std::vector<Vec2> verticalDynamicObstacle(double x, double y_start, double y_end
 Environment makeFigure5Scenario() {
     Environment env = baseEnvironment();
 
-    AgentSpec red_robot;
-    red_robot.id = 0;
-    red_robot.priority = 0;
-    red_robot.name = "red";
-    red_robot.start = {4.0, 0.0};
-    red_robot.goal = {0.0, 13.0};
-
-    AgentSpec blue_robot;
-    blue_robot.id = 1;
-    blue_robot.priority = 1;
-    blue_robot.name = "blue";
-    blue_robot.start = {2.0, 2.0};
-    blue_robot.goal = {12.0, 0.0};
-
-    env.agents = {red_robot, blue_robot};
+    env.agents = {
+        makeAgent(0, 0, "red", {4.0, 0.0}, {0.0, 13.0}),
+        makeAgent(1, 1, "blue", {2.0, 2.0}, {12.0, 0.0}),
+    };
 
     DynamicObstacleSpec dynamic_obstacle;
     dynamic_obstacle.id = 0;
-    dynamic_obstacle.waypoints = verticalDynamicObstacle(10.0, 0.0, 12.0, 1.0);
+    // Finer steps so tree-depth time aligns with the obstacle's vertical motion.
+    dynamic_obstacle.waypoints = verticalDynamicObstacle(10.0, 0.0, 12.0, 0.5);
+    dynamic_obstacle.initial_variance = 0.1;
     env.dynamic_obstacles = {dynamic_obstacle};
 
     return env;
 }
 
 Environment makeFigure6Scenario() {
-    Environment env = makeFigure5Scenario();
-    env.agents[0].name = "green";
-    env.agents[0].priority = 0;
-    env.agents[1].name = "blue";
-    env.agents[1].priority = 1;
-    env.agents[0].start = {1.0, 14.0};
-    env.agents[0].goal = {14.0, 14.0};
-    env.agents[1].start = {14.0, 1.0};
-    env.agents[1].goal = {1.0, 1.0};
+    Environment env = baseEnvironment();
+    env.agents = {
+        makeAgent(0, 0, "green", {1.0, 14.0}, {14.0, 14.0}),
+        makeAgent(1, 1, "blue", {14.0, 1.0}, {1.0, 1.0}),
+    };
+    // Fig. 6 tests priority-based agent crossing only (no dynamic obstacle).
     return env;
 }
 
 Environment makeFigure7Scenario() {
-    Environment env = makeFigure5Scenario();
+    Environment env = baseEnvironment();
     env.static_obstacles.push_back({{8.0, 7.0}, 1.5});
+    env.agents = {
+        makeAgent(0, 0, "green", {1.0, 1.0}, {15.0, 15.0}),
+        makeAgent(1, 1, "blue", {15.0, 2.0}, {2.0, 15.0}),
+    };
 
-    env.agents[0].name = "green";
-    env.agents[0].priority = 0;
-    env.agents[0].start = {1.0, 1.0};
-    env.agents[0].goal = {15.0, 15.0};
-
-    env.agents[1].name = "blue";
-    env.agents[1].priority = 1;
-    env.agents[1].start = {15.0, 2.0};
-    env.agents[1].goal = {2.0, 15.0};
-
+    DynamicObstacleSpec dynamic_obstacle;
+    dynamic_obstacle.id = 0;
     // Dynamic obstacle moves downward, forcing blue to wait before crossing.
-    env.dynamic_obstacles[0].waypoints = verticalDynamicObstacle(9.0, 15.0, 1.0, 1.0);
+    dynamic_obstacle.waypoints = verticalDynamicObstacle(9.0, 15.0, 1.0, 0.5);
+    dynamic_obstacle.initial_variance = 0.1;
+    env.dynamic_obstacles = {dynamic_obstacle};
     return env;
 }
 

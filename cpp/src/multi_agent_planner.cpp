@@ -93,7 +93,21 @@ bool MultiAgentPlanner::planInitialTrajectories(
     const Environment& environment,
     std::vector<TrajectoryPrediction>& dynamic_predictions) {
     // Algorithm 1: each agent plans in priority order, seeing higher-priority broadcasts.
-    for (auto& agent : agents) {
+    const int default_max_iterations = config_.max_iterations;
+    const int default_goal_sample_rate = config_.goal_sample_rate;
+
+    for (std::size_t agent_index = 0; agent_index < agents.size(); ++agent_index) {
+        auto& agent = agents[agent_index];
+
+        // Lower-priority agents route around prior broadcasts and need extra search budget.
+        if (agent_index > 0) {
+            config_.max_iterations = default_max_iterations * 2;
+            config_.goal_sample_rate = std::min(35, default_goal_sample_rate + 15);
+        } else {
+            config_.max_iterations = default_max_iterations;
+            config_.goal_sample_rate = default_goal_sample_rate;
+        }
+
         const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
         Trajectory planned = planner_.plan(
             agent.state,
@@ -105,11 +119,16 @@ bool MultiAgentPlanner::planInitialTrajectories(
 
         if (planned.empty()) {
             std::cerr << "Failed to find initial plan for agent " << agent.spec.name << '\n';
+            config_.max_iterations = default_max_iterations;
+            config_.goal_sample_rate = default_goal_sample_rate;
             return false;
         }
 
         agent.planned = planned;
     }
+
+    config_.max_iterations = default_max_iterations;
+    config_.goal_sample_rate = default_goal_sample_rate;
     return true;
 }
 
@@ -145,6 +164,11 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
 
     config_.bounds_min = environment.bounds_min;
     config_.bounds_max = environment.bounds_max;
+
+    if (environment.agents.empty()) {
+        std::cerr << "Scenario has no agents.\n";
+        return result;
+    }
 
     std::vector<AgentRuntime> agents = initializeAgents(environment);
 

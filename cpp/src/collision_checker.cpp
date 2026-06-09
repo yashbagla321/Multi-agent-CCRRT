@@ -4,7 +4,7 @@
  *
  * Samples from the planning robot's Gaussian and estimates the fraction of
  * samples that fall inside static obstacles or moving objects' alpha-confidence sets.
- * Edge checks additionally reject geometric intersections with broadcast paths.
+ * Edge checks additionally reject static obstacle segment intersections.
  *
  * @see ccrrt/collision_checker.hpp
  */
@@ -28,7 +28,9 @@ Vec2 MonteCarloCollisionChecker::samplePosition(const GaussianState& state) cons
 bool MonteCarloCollisionChecker::pointInsideConfidenceSet(
     const Vec2& sample,
     const TrajectoryNode& object) const {
-    const double radius = std::sqrt(object.variance * chiSquaredThreshold2D(config_.confidence_alpha));
+    const double variance =
+        std::min(object.variance, config_.max_prediction_variance);
+    const double radius = std::sqrt(variance * chiSquaredThreshold2D(config_.confidence_alpha));
     return sample.distance(object.position) <= radius;
 }
 
@@ -65,33 +67,6 @@ bool MonteCarloCollisionChecker::sampleInCollision(
         }
     }
 
-    return false;
-}
-
-bool MonteCarloCollisionChecker::edgeIntersectsPredictedPath(
-    const Vec2& edge_start,
-    const Vec2& edge_end,
-    const TrajectoryPrediction& prediction,
-    int time_index) const {
-    if (prediction.nodes.size() < 2) {
-        return false;
-    }
-
-    const std::size_t start_index = static_cast<std::size_t>(std::max(time_index, 0));
-    if (start_index + 1 >= prediction.nodes.size()) {
-        return false;
-    }
-
-    // Reject if the candidate edge crosses any segment of the broadcast path.
-    for (std::size_t i = start_index; i + 1 < prediction.nodes.size(); ++i) {
-        if (segmentsIntersect(
-                edge_start,
-                edge_end,
-                prediction.nodes[i].position,
-                prediction.nodes[i + 1].position)) {
-            return true;
-        }
-    }
     return false;
 }
 
@@ -151,20 +126,7 @@ bool MonteCarloCollisionChecker::isEdgeSafe(
         return false;
     }
 
-    // 2. Geometric intersection with other agents' broadcast trajectories (Section 4.1).
-    for (const auto& prediction : agent_predictions) {
-        if (edgeIntersectsPredictedPath(edge_start, edge_end, prediction, time_index)) {
-            return false;
-        }
-    }
-
-    for (const auto& prediction : dynamic_predictions) {
-        if (edgeIntersectsPredictedPath(edge_start, edge_end, prediction, time_index)) {
-            return false;
-        }
-    }
-
-    // 3. Static obstacle segment clearance.
+    // 2. Static obstacle segment clearance.
     for (const auto& obstacle : static_obstacles) {
         if (pointSegmentDistance(obstacle.center, edge_start, edge_end) <= obstacle.radius) {
             return false;
