@@ -56,9 +56,37 @@ cmake --build build --config Release
 ./build/Release/multi_agent_ccrrt.exe --scenario figure7 --seed 42 --output output/figure7
 ```
 
+### Performance benchmarks
+
+Six additional scenarios in `scenarios/performance_scenarios.cpp` stress different bottlenecks:
+
+| Scenario | What it tests |
+|----------|----------------|
+| `perf_cluttered` | 10 static obstacles, dense MC collision checks |
+| `perf_four_agents` | 4 agents, priority-chain planning |
+| `perf_narrow_passage` | Tight corridor, frequent replans |
+| `perf_long_paths` | 3 agents, long corner-to-corner horizons |
+| `perf_multi_dynamic` | 3 dynamic obstacles crossing agent paths |
+| `perf_stress` | 3 agents + clutter + 3 dynamic (combined load) |
+
+```powershell
+# Run one performance case
+./build/Release/multi_agent_ccrrt.exe --scenario perf_cluttered --no-viz
+
+# Run all performance cases; prints timing table + benchmark.csv
+./build/Release/multi_agent_ccrrt.exe --benchmark-all --mc-samples 200
+
+# List all scenarios with descriptions
+./build/Release/multi_agent_ccrrt.exe --list-scenarios
+```
+
+`--benchmark-all` writes `output/benchmark/benchmark.csv` with columns: `scenario`, `success`, `elapsed_ms`, `replan_count`, `total_steps`, `max_timestep`. Each scenario also gets its own subdirectory under `output/benchmark/`.
+
+Use a lower `--mc-samples` value (e.g. 200) for faster iteration; use 1000 to match the paper.
+
 ### Preview scenarios (no simulation)
 
-Visualize layouts from `scenarios/paper_figures.cpp` before running the planner.
+Visualize layouts from `scenarios/` before running the planner.
 Requires SFML at build time.
 
 ```powershell
@@ -83,7 +111,8 @@ Preview window legend:
 
 | Flag | Description |
 |------|-------------|
-| `--scenario` | `figure5`, `figure6`, or `figure7` |
+| `--scenario` | Any name from `--list-scenarios` |
+| `--benchmark-all` | Run all `perf_*` scenarios; write `benchmark.csv` |
 | `--preview` | Show scenario layout only; skip simulation |
 | `--preview-all` | Preview all scenarios in sequence |
 | `--list-scenarios` | Print scenario names and exit |
@@ -97,7 +126,7 @@ Preview window legend:
 ```
 include/ccrrt/     Public headers (Doxygen-documented)
 src/               Core library implementation
-scenarios/         Paper figure scenario definitions
+scenarios/         Paper figures + performance benchmarks
 main.cpp           CLI entry point
 ARCHITECTURE.md    System design, data flow, and paper mapping
 Doxyfile           API documentation generator config

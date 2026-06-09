@@ -12,6 +12,7 @@
 #include "ccrrt/multi_agent_planner.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 
 namespace ccrrt {
@@ -137,6 +138,8 @@ bool MultiAgentPlanner::lazyCheck(
 }
 
 SimulationResult MultiAgentPlanner::run(const Environment& environment, const std::string& scenario_name) {
+    const auto clock_start = std::chrono::steady_clock::now();
+
     SimulationResult result;
     result.scenario_name = scenario_name;
 
@@ -232,7 +235,14 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
     result.agent_paths.resize(agents.size());
     for (std::size_t i = 0; i < agents.size(); ++i) {
         result.agent_paths[i] = agents[i].executed;
+        result.total_steps += static_cast<int>(agents[i].executed.size());
+        for (const auto& step : agents[i].executed) {
+            result.max_timestep = std::max(result.max_timestep, step.timestep);
+        }
     }
+
+    const auto clock_end = std::chrono::steady_clock::now();
+    result.elapsed_ms = std::chrono::duration<double, std::milli>(clock_end - clock_start).count();
     return result;
 }
 

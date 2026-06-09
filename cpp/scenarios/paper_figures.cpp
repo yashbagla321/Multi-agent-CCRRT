@@ -115,12 +115,4 @@ Environment makeFigure7Scenario() {
     return env;
 }
 
-std::vector<ScenarioEntry> allScenarios() {
-    return {
-        {"figure5", makeFigure5Scenario()},
-        {"figure6", makeFigure6Scenario()},
-        {"figure7", makeFigure7Scenario()},
-    };
-}
-
 }  // namespace ccrrt

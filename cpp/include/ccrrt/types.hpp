@@ -202,6 +202,15 @@ struct SimulationResult {
 
     /** @brief True if every agent reached its goal within the step limit. */
     bool success = false;
+
+    /** @brief Wall-clock runtime of MultiAgentPlanner::run() in milliseconds. */
+    double elapsed_ms = 0.0;
+
+    /** @brief Sum of executed steps across all agents. */
+    int total_steps = 0;
+
+    /** @brief Maximum global timestep reached before termination. */
+    int max_timestep = 0;
 };
 
 /**

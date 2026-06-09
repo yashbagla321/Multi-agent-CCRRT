@@ -49,7 +49,11 @@ else()
     target_compile_definitions(ccrrt_core PUBLIC CCRRT_HAS_SFML=0)
 endif()
 
-add_library(ccrrt_scenarios scenarios/paper_figures.cpp)
+add_library(ccrrt_scenarios
+    scenarios/paper_figures.cpp
+    scenarios/performance_scenarios.cpp
+    scenarios/scenarios.cpp
+)
 target_include_directories(ccrrt_scenarios PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(ccrrt_scenarios PUBLIC ccrrt_core)
 

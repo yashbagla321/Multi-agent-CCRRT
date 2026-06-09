@@ -39,6 +39,16 @@ public:
      * @return True on successful write.
      */
     bool exportSummaryJson(const SimulationResult& result, const std::string& output_directory) const;
+
+    /**
+     * @brief Writes a benchmark summary table (one row per prior run) to benchmark.csv.
+     * @param rows Collection of results to append as rows.
+     * @param output_directory Target directory path.
+     * @return True on successful write.
+     */
+    bool exportBenchmarkCsv(
+        const std::vector<SimulationResult>& rows,
+        const std::string& output_directory) const;
 };
 
 }  // namespace ccrrt

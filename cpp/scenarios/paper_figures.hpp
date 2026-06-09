@@ -17,29 +17,6 @@
 namespace ccrrt {
 
 /**
- * @brief Named scenario paired with its environment configuration.
- */
-struct ScenarioEntry {
-    /** @brief CLI identifier (e.g. "figure5"). */
-    std::string name;
-
-    /** @brief Full environment passed to MultiAgentPlanner::run(). */
-    Environment environment;
-};
-
-/**
- * @brief Returns all built-in paper scenarios for CLI selection.
- * @return Vector of {name, environment} entries for figure5, figure6, figure7.
- *
- * Preview without simulation:
- * @code
- * multi_agent_ccrrt --scenario figure5 --preview
- * multi_agent_ccrrt --preview-all
- * @endcode
- */
-std::vector<ScenarioEntry> allScenarios();
-
-/**
  * @brief Figure 5: 4 static obstacles, 2 robots, 1 vertical dynamic obstacle.
  *
  * Red robot (priority 0) plans first; blue robot (priority 1) routes around red

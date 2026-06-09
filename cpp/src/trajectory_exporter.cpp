@@ -73,6 +73,9 @@ bool TrajectoryExporter::exportSummaryJson(const SimulationResult& result, const
     file << "  \"scenario\": \"" << result.scenario_name << "\",\n";
     file << "  \"success\": " << (result.success ? "true" : "false") << ",\n";
     file << "  \"replan_count\": " << result.replan_count << ",\n";
+    file << "  \"elapsed_ms\": " << result.elapsed_ms << ",\n";
+    file << "  \"total_steps\": " << result.total_steps << ",\n";
+    file << "  \"max_timestep\": " << result.max_timestep << ",\n";
     file << "  \"agents\": [\n";
 
     for (std::size_t i = 0; i < result.agent_paths.size(); ++i) {
@@ -88,6 +91,34 @@ bool TrajectoryExporter::exportSummaryJson(const SimulationResult& result, const
 
     file << "  ]\n";
     file << "}\n";
+    return true;
+}
+
+bool TrajectoryExporter::exportBenchmarkCsv(
+    const std::vector<SimulationResult>& rows,
+    const std::string& output_directory) const {
+    if (!ensureDirectory(output_directory)) {
+        return false;
+    }
+
+    std::ostringstream filename;
+    filename << output_directory << "/benchmark.csv";
+    std::ofstream file(filename.str());
+    if (!file.is_open()) {
+        std::cerr << "Failed to open " << filename.str() << " for writing\n";
+        return false;
+    }
+
+    file << "scenario,success,elapsed_ms,replan_count,total_steps,max_timestep\n";
+    file << std::fixed << std::setprecision(2);
+    for (const auto& row : rows) {
+        file << row.scenario_name << ','
+             << (row.success ? "1" : "0") << ','
+             << row.elapsed_ms << ','
+             << row.replan_count << ','
+             << row.total_steps << ','
+             << row.max_timestep << '\n';
+    }
     return true;
 }
 
