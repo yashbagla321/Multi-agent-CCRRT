@@ -1,0 +1,12 @@
+# Build outputs
+cpp/build/
+cpp/output/
+**/CMakeFiles/
+**/CMakeCache.txt
+
+# Bundled SFML binaries (run cpp/scripts/fetch_sfml.ps1 to download locally)
+cpp/third_party/sfml/bin/
+cpp/third_party/sfml/lib/
+cpp/third_party/sfml/include/
+cpp/third_party/sfml/doc/
+cpp/third_party/sfml/license.md

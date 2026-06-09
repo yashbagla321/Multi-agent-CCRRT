@@ -18,9 +18,22 @@ C++17 implementation of the receding-horizon multi-agent Chance-Constrained RRT 
 
 Requirements:
 - CMake 3.16+
-- C++17 compiler (MSVC, GCC, or Clang)
+- C++17 compiler (MSVC 2022 recommended on Windows)
 - Git (for Eigen via FetchContent)
-- Optional: SFML 2.6 for visualization
+- SFML 2.6 for visualization (bundled under `third_party/sfml/` — see below)
+
+### Bundled SFML (Windows)
+
+SFML is vendored locally so you do not need a system install:
+
+```powershell
+cd cpp
+powershell -ExecutionPolicy Bypass -File scripts/fetch_sfml.ps1
+```
+
+This downloads SFML 2.6.1 (MSVC 64-bit) into `third_party/sfml/` (`bin/`, `lib/`, `include/`). CMake uses that path automatically and copies DLLs next to the executable after build.
+
+See [`third_party/sfml/README.md`](third_party/sfml/README.md) for manual install or other compilers.
 
 ```powershell
 cd cpp
