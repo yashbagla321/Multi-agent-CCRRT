@@ -38,6 +38,14 @@ GaussianState KalmanFilter::update(const GaussianState& predicted, const Vec2& m
     return updated;
 }
 
+GaussianState KalmanFilter::measurementUpdate(
+    const GaussianState& state,
+    const Vec2& measurement) const {
+    GaussianState updated = update(predict(state), measurement);
+    updated.variance = config_.measurement_noise;
+    return updated;
+}
+
 Vec2 KalmanFilter::simulateMeasurement(const Vec2& true_position, std::mt19937& rng) const {
     std::normal_distribution<double> noise(0.0, std::sqrt(config_.measurement_noise));
     return {true_position.x + noise(rng), true_position.y + noise(rng)};

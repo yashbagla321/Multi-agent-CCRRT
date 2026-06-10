@@ -96,7 +96,8 @@ struct StaticObstacle {
 /**
  * @brief Predicted future trajectory of a moving agent or dynamic obstacle.
  *
- * Each node carries a mean position and growing variance (Eq. 5 in the paper).
+ * Each node carries a mean position. During execution, per-step uncertainty is
+ * measurement_noise only; during RRT planning, robot tree variance still grows.
  * Lower-priority agents use these predictions for chance-constrained planning.
  */
 struct TrajectoryPrediction {
@@ -255,32 +256,31 @@ inline TrajectoryNode TrajectoryPrediction::nodeAt(std::size_t index) const {
 /**
  * @brief Builds a TrajectoryPrediction from a sequence of mean waypoints.
  *
- * Variance grows linearly with each step: P_{j} = P_{j-1} + process_noise (Eq. 5).
+ * Each discrete step carries the same isotropic variance (measurement noise only).
+ * Uncertainty does not accumulate along the horizon; it resets each timestep to
+ * represent fresh sensing error on the nominal path.
  *
  * @param waypoints Ordered mean positions of the moving object.
- * @param initial_variance Variance at the first waypoint.
- * @param process_noise Variance increment per prediction step.
- * @return Time-indexed prediction with growing uncertainty.
+ * @param per_step_variance Variance at every waypoint (typically measurement_noise).
  */
 inline TrajectoryPrediction makePredictionFromWaypoints(
     const std::vector<Vec2>& waypoints,
-    double initial_variance,
-    double process_noise) {
+    double per_step_variance) {
     TrajectoryPrediction prediction;
-    double variance = initial_variance;
     for (std::size_t i = 0; i < waypoints.size(); ++i) {
         TrajectoryNode node;
         node.position = waypoints[i];
-        node.variance = variance;
+        node.variance = per_step_variance;
         node.time_step = static_cast<int>(i);
         prediction.nodes.push_back(node);
-        variance += process_noise;
     }
     return prediction;
 }
 
 /**
  * @brief Builds a TrajectoryPrediction with explicit variance at each waypoint.
+ *
+ * @deprecated Prefer makePredictionFromWaypoints with constant measurement_noise.
  */
 inline TrajectoryPrediction makePredictionFromWaypointsWithVariances(
     const std::vector<Vec2>& waypoints,

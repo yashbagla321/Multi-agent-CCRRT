@@ -37,6 +37,14 @@ public:
     GaussianState predict(const GaussianState& state) const;
 
     /**
+     * @brief Incorporates a position measurement and collapses covariance to measurement noise.
+     *
+     * Runs predict/update, then sets posterior variance to measurement_noise so each
+     * executed timestep reflects fresh GPS uncertainty only (no accumulated drift).
+     */
+    GaussianState measurementUpdate(const GaussianState& state, const Vec2& measurement) const;
+
+    /**
      * @brief Incorporates a position measurement (Eq. 6–7).
      *
      * @param predicted Predicted state from predict().

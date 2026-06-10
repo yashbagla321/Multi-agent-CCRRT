@@ -104,6 +104,7 @@ TrajectoryPrediction MultiAgentPlanner::advancePrediction(const TrajectoryPredic
     advanced.nodes.assign(prediction.nodes.begin() + 1, prediction.nodes.end());
     for (std::size_t i = 0; i < advanced.nodes.size(); ++i) {
         advanced.nodes[i].time_step = static_cast<int>(i);
+        advanced.nodes[i].variance = config_.measurement_noise;
     }
     return advanced;
 }
@@ -197,6 +198,10 @@ bool MultiAgentPlanner::lazyCheck(
     const int time_end = agent.planned.nodes[1].time_step;
     const auto variances =
         variancesAlongPlannedEdge(agent.planned.nodes[0], agent.planned.nodes[1]);
+    std::vector<double> edge_variances = variances;
+    if (!edge_variances.empty()) {
+        edge_variances.front() = agent.state.variance;
+    }
 
     const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
     return isSpanEdgeSafe(
@@ -205,7 +210,7 @@ bool MultiAgentPlanner::lazyCheck(
         edge_end,
         time_start,
         time_end,
-        variances,
+        edge_variances,
         static_obstacles,
         agent_predictions,
         dynamic_predictions);
@@ -278,20 +283,13 @@ SimulationResult MultiAgentPlanner::run(
 
     std::vector<AgentRuntime> agents = initializeAgents(environment);
 
-    // Build dynamic obstacle predictions with growing variance along mean waypoints.
+    // Dynamic obstacles: constant per-step variance (measurement noise on nominal path).
     std::vector<TrajectoryPrediction> dynamic_predictions;
     dynamic_predictions.reserve(environment.dynamic_obstacles.size());
     for (const auto& obstacle : environment.dynamic_obstacles) {
-        if (!obstacle.variance_per_waypoint.empty()) {
-            dynamic_predictions.push_back(makePredictionFromWaypointsWithVariances(
-                obstacle.waypoints,
-                obstacle.variance_per_waypoint));
-        } else {
-            dynamic_predictions.push_back(makePredictionFromWaypoints(
-                obstacle.waypoints,
-                obstacle.initial_variance,
-                config_.process_noise));
-        }
+        dynamic_predictions.push_back(makePredictionFromWaypoints(
+            obstacle.waypoints,
+            config_.measurement_noise));
     }
 
     if (!planInitialTrajectories(agents, environment, dynamic_predictions)) {
@@ -343,8 +341,8 @@ SimulationResult MultiAgentPlanner::run(
                 agent.state.mean.distance(target) <= step_size;
 
             const Vec2 measurement = kalman_.simulateMeasurement(next_position, rng_);
+            agent.state = kalman_.measurementUpdate(agent.state, measurement);
             agent.state.mean = next_position;
-            agent.state = kalman_.update(kalman_.predict(agent.state), measurement);
 
             if (reached_waypoint) {
                 shiftTrajectory(agent.planned);

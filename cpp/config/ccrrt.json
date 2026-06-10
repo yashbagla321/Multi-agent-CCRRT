@@ -71,7 +71,7 @@
     "_max_prediction_variance": "Cap on prediction tube size. Default: 0.8",
     "max_prediction_variance": 0.8,
 
-    "_measurement_noise": "Kalman filter measurement noise. Default: 0.2",
+    "_measurement_noise": "Kalman measurement noise; also per-step uncertainty after GPS collapse for robots and dynamic obstacles. Default: 0.2",
     "measurement_noise": 0.2,
 
     "_bounds_min": "RRT sampling lower bound (overridden by scenario bounds at runtime). Default: -4.0",

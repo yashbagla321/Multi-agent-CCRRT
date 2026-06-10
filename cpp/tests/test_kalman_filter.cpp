@@ -36,6 +36,19 @@ TEST(KalmanFilter, UpdateReducesVariance) {
     EXPECT_GT(updated.variance, 0.0);
 }
 
+TEST(KalmanFilter, MeasurementUpdateCollapsesVariance) {
+    PlannerConfig config;
+    config.measurement_noise = 0.15;
+    KalmanFilter filter(config);
+
+    GaussianState state;
+    state.mean = {1.0, 2.0};
+    state.variance = 0.8;
+
+    const GaussianState updated = filter.measurementUpdate(state, {1.1, 2.1});
+    EXPECT_DOUBLE_EQ(updated.variance, config.measurement_noise);
+}
+
 TEST(KalmanFilter, SimulateMeasurementIsDeterministicWithFixedSeed) {
     PlannerConfig config;
     KalmanFilter filter(config);
