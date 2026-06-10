@@ -39,7 +39,7 @@ void printUsage() {
               << "  --seed <n>         RNG seed (default: 42)\n"
               << "  --mc-samples <n>   Monte Carlo samples (default: 1000)\n"
               << "  --python-compat    Use Multiagent CCRRT.py planner settings\n"
-              << "\nSee CONFIG.md for the full JSON schema.\n";
+              << "\nSee CONFIG.md for the full schema; config/ccrrt.json has per-field descriptions.\n";
 }
 
 void printScenarioList(const ccrrt::ScenarioRegistry& registry) {

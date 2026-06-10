@@ -2,6 +2,8 @@
 
 All **planner parameters** and **scenario geometry** (obstacles, starts, goals, dynamic paths) live in JSON files. Edit and re-run — **no rebuild required**.
 
+Parameter descriptions are inline in the config files (`"_field_name": "..."` immediately before each field). Keys starting with `_` are ignored by the loader.
+
 ## Files
 
 | File | Purpose |
@@ -43,7 +45,7 @@ A config file is **required** at startup (auto-discovered or via `--config`).
 
 ---
 
-## `ccrrt.json` top-level schema
+## `ccrrt.json` structure
 
 ```json
 {
@@ -61,45 +63,7 @@ A config file is **required** at startup (auto-discovered or via `--config`).
 | `planner` | Algorithm parameters |
 | `scenarios` | Optional inline scenarios; **override** entries in `scenarios_file` by name |
 
----
-
-## `run` — execution options
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `scenario` | string | `"figure5"` | Name from `scenarios.json` |
-| `output_directory` | string | `""` | Empty → `output/<scenario>` |
-| `enable_visualization` | bool | `true` | Master switch for SFML visualization |
-| `live_visualization` | bool | `true` | Step-by-step live window during simulation |
-| `viz_step_delay_ms` | int | `150` | Delay between live viz frames (milliseconds) |
-| `preview_only` | bool | `false` | Layout preview only |
-| `preview_all` | bool | `false` | Preview every scenario |
-| `list_scenarios` | bool | `false` | Print scenario list and exit |
-| `benchmark_all` | bool | `false` | Run all `category: performance` scenarios |
-| `python_compat` | bool | `false` | `Multiagent CCRRT.py` compatibility mode |
-
----
-
-## `planner` — algorithm parameters
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `expand_distance` | number | `0.5` | RRT step size |
-| `collision_bound_M` | number | `0.2` | Max collision probability per step |
-| `confidence_alpha` | number | `0.99` | α-confidence level |
-| `mc_samples` | int | `1000` | Monte Carlo samples per check |
-| `max_iterations` | int | `5000` | Max RRT iterations |
-| `max_timesteps` | int | `500` | Max simulation timesteps |
-| `goal_sample_rate` | int | `5` | Goal-bias rate (percent) |
-| `initial_variance` | number | `0.2` | Initial position variance |
-| `process_noise` | number | `0.2` | Additive variance per tree step |
-| `max_prediction_variance` | number | `0.8` | Cap on prediction tube size |
-| `measurement_noise` | number | `0.2` | Kalman measurement noise |
-| `bounds_min` / `bounds_max` | number | `-2` / `17` | RRT sampling bounds |
-| `rng_seed` | int | `42` | RNG seed |
-| `use_legacy_collision` | bool | `false` | Python-style deterministic checks |
-| `legacy_p_safe` | number | `0.8` | Legacy safety factor |
-| `variance_growth_alpha` | number | `0.1` | Multiplicative variance growth (legacy) |
+See `config/ccrrt.json` for per-field descriptions.
 
 ---
 
@@ -233,4 +197,21 @@ Then set `"scenario": "my_corridor"` in `ccrrt.json` or pass `--scenario my_corr
 
 Inline `scenarios` entries replace the same-named entry from `scenarios_file`.
 
-Keys starting with `_` are ignored (use for comments like `_comment`).
+---
+
+## CLI flags (override config)
+
+| Flag | Config field |
+|------|--------------|
+| `--scenario <name>` | `run.scenario` |
+| `--output <dir>` | `run.output_directory` |
+| `--no-viz` | `run.enable_visualization = false` |
+| `--no-live-viz` | `run.live_visualization = false` |
+| `--viz-delay-ms <n>` | `run.viz_step_delay_ms` |
+| `--preview` | `run.preview_only = true` |
+| `--preview-all` | `run.preview_all = true` |
+| `--list-scenarios` | `run.list_scenarios = true` |
+| `--benchmark-all` | `run.benchmark_all = true` |
+| `--seed <n>` | `planner.rng_seed` |
+| `--mc-samples <n>` | `planner.mc_samples` |
+| `--python-compat` | `run.python_compat = true` (+ planner preset) |

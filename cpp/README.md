@@ -71,7 +71,7 @@ Edit `config/ccrrt.json` (planner/run settings) and `config/scenarios.json` (obs
 ./build/Release/multi_agent_ccrrt.exe --mc-samples 100 --seed 42
 ```
 
-See **[CONFIG.md](CONFIG.md)** for the full JSON schema. Recent changes are listed in **[CHANGELOG.md](CHANGELOG.md)**.
+See **[CONFIG.md](CONFIG.md)** for the full schema. Per-field descriptions are inline in `config/ccrrt.json`. Recent changes are listed in **[CHANGELOG.md](CHANGELOG.md)**.
 
 ### Performance benchmarks
 

@@ -12,7 +12,7 @@
 - Scenario `category`: `paper` or `performance` (for benchmarks).
 - Inline `"scenarios"` in `ccrrt.json` overrides entries in `scenarios_file` by name.
 - Removed `ccrrt_scenarios` library; scenarios are config-driven only.
-- See **[CONFIG.md](CONFIG.md)** for the full schema.
+- See **[CONFIG.md](CONFIG.md)** for the full schema; per-field docs are inline in `config/ccrrt.json`.
 
 ### Python reference test case
 
@@ -43,5 +43,6 @@
 ### Documentation
 
 - **CONFIG.md** — runtime configuration reference.
+- Per-field parameter docs inline in `config/ccrrt.json` (`"_field": "description"` before each field).
 - **CHANGELOG.md** — this file.
 - Updated **README.md** with config and python_reference usage.

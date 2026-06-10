@@ -1,38 +1,89 @@
 {
-  "_comment": "Edit this file and re-run the executable — no rebuild required. CLI flags override these values.",
-
+  "_scenarios_file": "Path to scenario definitions, relative to this file's directory.",
   "scenarios_file": "scenarios.json",
 
   "run": {
+    "_scenario": "Scenario name from scenarios.json or inline scenarios block. Default: figure5",
     "scenario": "figure5",
+
+    "_output_directory": "CSV/JSON output folder. Empty string uses output/<scenario>.",
     "output_directory": "",
+
+    "_enable_visualization": "Master switch for SFML visualization. Default: true. CLI: --no-viz",
     "enable_visualization": true,
+
+    "_live_visualization": "Step-by-step live window during simulation. Default: true. CLI: --no-live-viz",
     "live_visualization": true,
+
+    "_viz_step_delay_ms": "Milliseconds between live visualization frames. Default: 150. CLI: --viz-delay-ms",
     "viz_step_delay_ms": 150,
+
+    "_preview_only": "Show scenario layout only; skip simulation. CLI: --preview",
     "preview_only": false,
+
+    "_preview_all": "Preview every scenario in sequence. CLI: --preview-all",
     "preview_all": false,
+
+    "_list_scenarios": "Print scenario list and exit. CLI: --list-scenarios",
     "list_scenarios": false,
+
+    "_benchmark_all": "Run all performance scenarios and write benchmark.csv. CLI: --benchmark-all",
     "benchmark_all": false,
+
+    "_python_compat": "Use Multiagent CCRRT.py planner settings. CLI: --python-compat",
     "python_compat": false
   },
 
   "planner": {
+    "_expand_distance": "RRT step size (m). Default: 0.5",
     "expand_distance": 0.5,
+
+    "_collision_bound_M": "Max collision probability per step (chance constraint M). Default: 0.2",
     "collision_bound_M": 0.2,
+
+    "_confidence_alpha": "Alpha-confidence level for uncertainty tubes. Default: 0.99",
     "confidence_alpha": 0.99,
+
+    "_mc_samples": "Monte Carlo samples per collision check. Default: 1000. CLI: --mc-samples",
     "mc_samples": 1000,
+
+    "_max_iterations": "Max RRT iterations per plan. Default: 5000",
     "max_iterations": 5000,
+
+    "_max_timesteps": "Max simulation timesteps. Default: 500",
     "max_timesteps": 500,
+
+    "_goal_sample_rate": "Goal-bias sampling rate (percent). Default: 5",
     "goal_sample_rate": 5,
+
+    "_initial_variance": "Initial position variance. Default: 0.1",
     "initial_variance": 0.1,
+
+    "_process_noise": "Additive variance per tree step and prediction advance. Default: 0.1",
     "process_noise": 0.1,
+
+    "_max_prediction_variance": "Cap on prediction tube size. Default: 0.8",
     "max_prediction_variance": 0.8,
+
+    "_measurement_noise": "Kalman filter measurement noise. Default: 0.2",
     "measurement_noise": 0.2,
+
+    "_bounds_min": "RRT sampling lower bound (overridden by scenario bounds at runtime). Default: -4.0",
     "bounds_min": -4.0,
+
+    "_bounds_max": "RRT sampling upper bound (overridden by scenario bounds at runtime). Default: 20.0",
     "bounds_max": 20.0,
+
+    "_rng_seed": "RNG seed for reproducibility. Default: 42. CLI: --seed",
     "rng_seed": 42,
+
+    "_use_legacy_collision": "Use Python-style deterministic collision checks instead of Monte Carlo. Default: false",
     "use_legacy_collision": false,
+
+    "_legacy_p_safe": "Legacy safety factor when use_legacy_collision is true. Default: 0.8",
     "legacy_p_safe": 0.8,
+
+    "_variance_growth_alpha": "Multiplicative variance growth factor in legacy mode. Default: 0.1",
     "variance_growth_alpha": 0.1
   }
 }

@@ -1,6 +1,4 @@
 {
-  "_comment": "All test scenarios — edit positions, radii, starts, goals without rebuilding.",
-
   "figure5": {
     "category": "paper",
     "description": "Paper Fig. 5: 2 agents, 4 static, 1 dynamic",
