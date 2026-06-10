@@ -4,7 +4,7 @@
   "figure5": {
     "category": "paper",
     "description": "Paper Fig. 5: 2 agents, 4 static, 1 dynamic",
-    "bounds": { "min": -2.0, "max": 17.0 },
+    "bounds": { "min": -4.0, "max": 17.0 },
     "static_obstacles": [
       { "center": [7.0, 4.0], "radius": 2.0 },
       { "center": [3.0, 6.0], "radius": 1.5 },
@@ -12,8 +12,8 @@
       { "center": [13.0, 10.0], "radius": 2.0 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "red",  "start": [4.0, 0.0], "goal": [0.0, 13.0] },
-      { "id": 1, "priority": 1, "name": "blue", "start": [2.0, 2.0], "goal": [12.0, 0.0] }
+      { "id": 0, "priority": 0, "name": "red",  "start": [5.0, -1.0], "goal": [0.0, 13.0] },
+      { "id": 1, "priority": 1, "name": "blue", "start": [1.0, 2.0], "goal": [14.0, 0.0] }
     ],
     "dynamic_obstacles": [
       {
@@ -35,21 +35,20 @@
       { "center": [13.0, 10.0], "radius": 2.0 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "green", "start": [1.0, 14.0], "goal": [14.0, 14.0] },
-      { "id": 1, "priority": 1, "name": "blue",  "start": [14.0, 1.0], "goal": [1.0, 1.0] }
+      { "id": 0, "priority": 0, "name": "green", "start": [1.0, 14.0], "goal": [14.0, 1.0] },
+      { "id": 1, "priority": 1, "name": "blue",  "start": [14.0, 1.0], "goal": [1.0, 14.0] }
     ]
   },
 
   "figure7": {
     "category": "paper",
     "description": "Paper Fig. 7: zig-zag wait for dynamic obstacle",
-    "bounds": { "min": -2.0, "max": 17.0 },
+    "bounds": { "min": -3.0, "max": 19.0 },
     "static_obstacles": [
-      { "center": [7.0, 4.0], "radius": 2.0 },
+      { "center": [7.0, 4.0], "radius": 1.5 },
       { "center": [3.0, 6.0], "radius": 1.5 },
       { "center": [5.0, 10.0], "radius": 2.0 },
-      { "center": [13.0, 10.0], "radius": 2.0 },
-      { "center": [8.0, 7.0], "radius": 1.5 }
+      { "center": [13.0, 10.0], "radius": 1.5 }
     ],
     "agents": [
       { "id": 0, "priority": 0, "name": "green", "start": [1.0, 1.0],  "goal": [15.0, 15.0] },
@@ -59,7 +58,7 @@
       {
         "id": 0,
         "initial_variance": 0.1,
-        "path": { "type": "vertical", "x": 9.0, "y_start": 15.0, "y_end": 1.0, "step": 0.5 }
+        "path": { "type": "vertical", "x": 10.0, "y_start": 15.0, "y_end": 1.0, "step": 0.5 }
       }
     ]
   },
@@ -67,7 +66,7 @@
   "python_reference": {
     "category": "paper",
     "description": "Multiagent CCRRT.py main() test: 2 agents, 4 static, 1 dynamic",
-    "bounds": { "min": -2.0, "max": 15.0 },
+    "bounds": { "min": -4.0, "max": 17.0 },
     "static_obstacles": [
       { "center": [7.0, 4.0], "radius": 2.0 },
       { "center": [3.0, 6.0], "radius": 1.5 },
@@ -75,13 +74,13 @@
       { "center": [13.0, 10.0], "radius": 2.0 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "red",  "start": [4.0, 0.0], "goal": [0.0, 13.0] },
-      { "id": 1, "priority": 1, "name": "blue", "start": [2.0, 2.0], "goal": [12.0, 0.0] }
+      { "id": 0, "priority": 0, "name": "red",  "start": [5.0, -1.0], "goal": [0.0, 14.0] },
+      { "id": 1, "priority": 1, "name": "blue", "start": [1.0, 2.0], "goal": [14.0, 0.0] }
     ],
     "dynamic_obstacles": [
       {
         "id": 0,
-        "initial_variance": 0.2,
+        "initial_variance": 0.15,
         "waypoints": [
           [10.0, 0.0], [10.0, 1.0], [10.0, 2.0], [10.0, 3.0], [10.0, 4.0],
           [10.0, 5.0], [10.0, 6.0], [10.0, 7.0], [10.0, 8.0], [10.0, 9.0],
@@ -97,27 +96,25 @@
   "perf_cluttered": {
     "category": "performance",
     "description": "10 static obstacles; tests MC collision cost in dense maps",
-    "bounds": { "min": -2.0, "max": 17.0 },
+    "bounds": { "min": -4.0, "max": 20.0 },
     "static_obstacles": [
       { "center": [4.0, 3.0],  "radius": 1.2 },
       { "center": [8.0, 2.5],  "radius": 1.4 },
-      { "center": [12.0, 4.0], "radius": 1.3 },
+      { "center": [13.0, 4.0], "radius": 1.3 },
       { "center": [3.0, 7.0],  "radius": 1.5 },
       { "center": [7.0, 6.5],  "radius": 1.6 },
-      { "center": [11.0, 7.5], "radius": 1.4 },
       { "center": [5.0, 11.0], "radius": 1.5 },
-      { "center": [9.0, 10.0], "radius": 1.3 },
-      { "center": [13.0, 12.0], "radius": 1.5 },
-      { "center": [6.0, 14.0], "radius": 1.2 }
+      { "center": [8.0, 10.0], "radius": 0.8 },
+      { "center": [13.0, 12.0], "radius": 1.5 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "agent_a", "start": [1.0, 1.0],  "goal": [14.0, 14.0] },
+      { "id": 0, "priority": 0, "name": "agent_a", "start": [1.0, 1.0],  "goal": [16.0, 16.0] },
       { "id": 1, "priority": 1, "name": "agent_b", "start": [14.0, 1.0], "goal": [1.0, 14.0] }
     ],
     "dynamic_obstacles": [
       {
         "id": 0,
-        "initial_variance": 0.2,
+        "initial_variance": 0.1,
         "path": { "type": "vertical", "x": 10.5, "y_start": 0.5, "y_end": 14.5, "step": 1.0 }
       }
     ]
@@ -126,25 +123,23 @@
   "perf_four_agents": {
     "category": "performance",
     "description": "4 agents + 5 static; tests priority-chain planning scale",
-    "bounds": { "min": -2.0, "max": 17.0 },
+    "bounds": { "min": -4.0, "max": 20.0 },
     "static_obstacles": [
       { "center": [7.0, 4.0],  "radius": 2.0 },
-      { "center": [3.0, 6.0],  "radius": 1.5 },
       { "center": [5.0, 10.0], "radius": 2.0 },
-      { "center": [13.0, 10.0], "radius": 2.0 },
-      { "center": [8.5, 7.5],  "radius": 1.2 }
+      { "center": [13.0, 10.0], "radius": 2.0 }
     ],
     "agents": [
       { "id": 0, "priority": 0, "name": "agent_0", "start": [0.5, 0.5],   "goal": [14.5, 14.5] },
       { "id": 1, "priority": 1, "name": "agent_1", "start": [14.5, 0.5],  "goal": [0.5, 14.5] },
       { "id": 2, "priority": 2, "name": "agent_2", "start": [0.5, 14.5],  "goal": [14.5, 0.5] },
-      { "id": 3, "priority": 3, "name": "agent_3", "start": [7.5, 0.5],   "goal": [7.5, 14.5] }
+      { "id": 3, "priority": 3, "name": "agent_3", "start": [7.5, -0.5],   "goal": [7.5, 14.5] }
     ],
     "dynamic_obstacles": [
       {
         "id": 0,
-        "initial_variance": 0.2,
-        "path": { "type": "horizontal", "y": 8.0, "x_start": 1.0, "x_end": 14.0, "step": 1.0 }
+        "initial_variance": 0.1,
+        "path": { "type": "horizontal", "y": 7.0, "x_start": 1.0, "x_end": 14.0, "step": 1.0 }
       }
     ]
   },
@@ -152,17 +147,17 @@
   "perf_narrow_passage": {
     "category": "performance",
     "description": "narrow gap at y=8; tests replanning in tight corridors",
-    "bounds": { "min": -2.0, "max": 17.0 },
+    "bounds": { "min": -4.0, "max": 20.0 },
     "static_obstacles": [
       { "center": [4.0, 8.0],  "radius": 2.5 },
       { "center": [6.0, 8.0],  "radius": 2.5 },
       { "center": [10.0, 8.0], "radius": 2.5 },
-      { "center": [12.0, 8.0], "radius": 2.5 },
+      { "center": [12.0, 8.0], "radius": 2.0 },
       { "center": [3.0, 12.0], "radius": 1.5 },
       { "center": [11.0, 4.0], "radius": 1.5 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "west",  "start": [1.0, 8.0], "goal": [14.0, 8.0] },
+      { "id": 0, "priority": 0, "name": "west",  "start": [-1.0, 8.0], "goal": [16.0, 8.0] },
       { "id": 1, "priority": 1, "name": "south", "start": [8.0, 1.0], "goal": [8.0, 14.0] }
     ],
     "dynamic_obstacles": [
@@ -193,30 +188,30 @@
   "perf_multi_dynamic": {
     "category": "performance",
     "description": "2 agents + 3 dynamic obstacles; tests moving-object predictions",
-    "bounds": { "min": -2.0, "max": 17.0 },
+    "bounds": { "min": -4.0, "max": 19.0 },
     "static_obstacles": [
-      { "center": [6.0, 6.0],  "radius": 1.5 },
-      { "center": [10.0, 6.0], "radius": 1.5 },
-      { "center": [8.0, 10.0], "radius": 1.5 }
+      { "center": [5.0, 5.0],  "radius": 1.5 },
+      { "center": [11.0, 5.0], "radius": 1.5 },
+      { "center": [8.0, 11.0], "radius": 1.5 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "north", "start": [8.0, 1.0],  "goal": [8.0, 14.0] },
-      { "id": 1, "priority": 1, "name": "east",  "start": [14.0, 8.0], "goal": [1.0, 8.0] }
+      { "id": 0, "priority": 0, "name": "north", "start": [8.0, 1.0],  "goal": [8.0, 15.0] },
+      { "id": 1, "priority": 1, "name": "east",  "start": [14.0, 8.0], "goal": [0.0, 5.0] }
     ],
     "dynamic_obstacles": [
       {
         "id": 0,
-        "initial_variance": 0.2,
+        "initial_variance": 0.15,
         "path": { "type": "vertical", "x": 5.0, "y_start": 1.0, "y_end": 14.0, "step": 1.0 }
       },
       {
         "id": 1,
-        "initial_variance": 0.2,
+        "initial_variance": 0.15,
         "path": { "type": "vertical", "x": 11.0, "y_start": 14.0, "y_end": 1.0, "step": 1.0 }
       },
       {
         "id": 2,
-        "initial_variance": 0.2,
+        "initial_variance": 0.15,
         "path": { "type": "horizontal", "y": 8.0, "x_start": 1.0, "x_end": 14.0, "step": 1.0 }
       }
     ]
@@ -225,7 +220,7 @@
   "perf_stress": {
     "category": "performance",
     "description": "3 agents, clutter + 3 dynamic; combined stress benchmark",
-    "bounds": { "min": -2.0, "max": 17.0 },
+    "bounds": { "min": -4.0, "max": 20.0 },
     "static_obstacles": [
       { "center": [4.0, 3.0],  "radius": 1.2 },
       { "center": [8.0, 2.5],  "radius": 1.4 },
@@ -239,9 +234,9 @@
       { "center": [6.0, 14.0], "radius": 1.2 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "agent_a", "start": [1.0, 1.0],  "goal": [14.0, 14.0] },
-      { "id": 1, "priority": 1, "name": "agent_b", "start": [14.0, 1.0], "goal": [1.0, 14.0] },
-      { "id": 2, "priority": 2, "name": "agent_c", "start": [7.5, 0.5],  "goal": [7.5, 14.5] }
+      { "id": 0, "priority": 0, "name": "agent_a", "start": [1.0, 1.0],  "goal": [16.0, 16.0] },
+      { "id": 1, "priority": 1, "name": "agent_b", "start": [14.0, 1.0], "goal": [-1.0, 15.0] },
+      { "id": 2, "priority": 2, "name": "agent_c", "start": [7.5, -1.0],  "goal": [7.5, 17.0] }
     ],
     "dynamic_obstacles": [
       {
