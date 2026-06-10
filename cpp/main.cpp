@@ -38,6 +38,7 @@ void printUsage() {
               << "  --output <dir>     Output directory (default: output/<scenario>)\n"
               << "  --seed <n>         RNG seed (default: 42)\n"
               << "  --mc-samples <n>   Monte Carlo samples (default: 1000)\n"
+              << "  --path-smoothing   Enable RRT shortcut path smoothing\n"
               << "  --python-compat    Use Multiagent CCRRT.py planner settings\n"
               << "\nSee CONFIG.md for the full schema; config/ccrrt.json has per-field descriptions.\n";
 }

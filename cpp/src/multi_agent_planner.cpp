@@ -21,6 +21,26 @@
 
 namespace ccrrt {
 
+namespace {
+
+double effectiveMotionStep(const PlannerConfig& config) {
+    if (config.motion_step <= 0.0) {
+        return config.expand_distance;
+    }
+    return std::min(config.motion_step, config.expand_distance);
+}
+
+Vec2 advanceToward(const Vec2& from, const Vec2& to, double step_size) {
+    const Vec2 delta = to - from;
+    const double distance = delta.norm();
+    if (distance <= step_size || distance <= 1e-9) {
+        return to;
+    }
+    return from + delta * (step_size / distance);
+}
+
+}  // namespace
+
 MultiAgentPlanner::MultiAgentPlanner(PlannerConfig config)
     : config_(config),
       rng_(config.rng_seed),
@@ -149,7 +169,7 @@ bool MultiAgentPlanner::lazyCheck(
         return true;
     }
 
-    const Vec2 edge_start = agent.planned.nodes[0].position;
+    const Vec2 edge_start = agent.state.mean;
     const Vec2 edge_end = agent.planned.nodes[1].position;
     const double variance = agent.planned.nodes[1].variance;
 
@@ -288,13 +308,20 @@ SimulationResult MultiAgentPlanner::run(
             step.variance = agent.state.variance;
             agent.executed.push_back(step);
 
-            // Navigate to next planned node; simulate GPS and Kalman update.
-            const Vec2 next_position = agent.planned.nodes[1].position;
+            const Vec2 target = agent.planned.nodes[1].position;
+            const double step_size = effectiveMotionStep(config_);
+            const Vec2 next_position = advanceToward(agent.state.mean, target, step_size);
+            const bool reached_waypoint =
+                next_position.distance(target) <= 1e-9 ||
+                agent.state.mean.distance(target) <= step_size;
+
             const Vec2 measurement = kalman_.simulateMeasurement(next_position, rng_);
             agent.state.mean = next_position;
             agent.state = kalman_.update(kalman_.predict(agent.state), measurement);
 
-            shiftTrajectory(agent.planned);
+            if (reached_waypoint) {
+                shiftTrajectory(agent.planned);
+            }
 
             // Lazy check + optional replan if unsafe or shorter path found.
             const bool lazy_safe =

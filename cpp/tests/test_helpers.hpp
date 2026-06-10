@@ -12,7 +12,8 @@ inline PlannerConfig fastTestPlannerConfig() {
     config.collision_bound_M = 0.2;
     config.mc_samples = 200;
     config.max_iterations = 8000;
-    config.max_timesteps = 300;
+    config.max_timesteps = 600;
+    config.motion_step = 0.5;
     config.goal_sample_rate = 20;
     config.bounds_min = 0.0;
     config.bounds_max = 10.0;

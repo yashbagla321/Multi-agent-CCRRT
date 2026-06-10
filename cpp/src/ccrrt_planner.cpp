@@ -82,6 +82,57 @@ Trajectory CCRRTPlanner::extractPath(
     return trajectory;
 }
 
+Trajectory CCRRTPlanner::shortcutSmooth(
+    const Trajectory& path,
+    const Vec2& goal,
+    const std::vector<StaticObstacle>& static_obstacles,
+    const std::vector<TrajectoryPrediction>& agent_predictions,
+    const std::vector<TrajectoryPrediction>& dynamic_predictions,
+    int time_offset) const {
+    if (!config_.enable_path_smoothing || path.nodes.size() < 3) {
+        return path;
+    }
+
+    Trajectory smoothed;
+    smoothed.nodes.push_back(path.nodes.front());
+    std::size_t anchor = 0;
+
+    while (anchor < path.nodes.size() - 1) {
+        std::size_t best = anchor + 1;
+        for (std::size_t j = path.nodes.size() - 1; j > anchor + 1; --j) {
+            const int horizon_index = time_offset + static_cast<int>(smoothed.nodes.size());
+            if (collision_checker_.isEdgeSafe(
+                    smoothed.nodes.back().position,
+                    path.nodes[j].position,
+                    path.nodes[j].variance,
+                    static_obstacles,
+                    agent_predictions,
+                    dynamic_predictions,
+                    horizon_index)) {
+                best = j;
+                break;
+            }
+        }
+
+        TrajectoryNode node = path.nodes[best];
+        node.time_step = static_cast<int>(smoothed.nodes.size());
+        smoothed.nodes.push_back(node);
+        anchor = best;
+    }
+
+    if (smoothed.nodes.back().position.distance(goal) > 1e-6 &&
+        path.nodes.back().position.distance(goal) <= 1e-6) {
+        TrajectoryNode goal_node = path.nodes.back();
+        goal_node.time_step = static_cast<int>(smoothed.nodes.size());
+        smoothed.nodes.push_back(goal_node);
+    }
+
+    for (std::size_t i = 0; i < smoothed.nodes.size(); ++i) {
+        smoothed.nodes[i].time_step = static_cast<int>(i);
+    }
+    return smoothed;
+}
+
 Trajectory CCRRTPlanner::plan(
     const GaussianState& start,
     const Vec2& goal,
@@ -168,7 +219,13 @@ Trajectory CCRRTPlanner::plan(
     }
     goal_node.time_step = static_cast<int>(path.nodes.size());
     path.nodes.push_back(goal_node);
-    return path;
+    return shortcutSmooth(
+        path,
+        goal,
+        static_obstacles,
+        agent_predictions,
+        dynamic_predictions,
+        time_offset);
 }
 
 }  // namespace ccrrt

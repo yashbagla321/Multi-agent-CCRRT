@@ -13,6 +13,7 @@ C++17 implementation of the receding-horizon multi-agent Chance-Constrained RRT 
 - Dynamic obstacles with predictable mean trajectories and growing uncertainty
 - Legacy Python-compatible collision mode (`--python-compat`)
 - Runtime JSON configuration — edit `config/` and re-run without rebuilding
+- Smoother executed paths via finer `motion_step`; optional RRT shortcut smoothing (`enable_path_smoothing`)
 - CSV/JSON trajectory export and benchmark summaries
 - Optional SFML visualization (static preview, live per-timestep simulation, post-run result view)
 - Google Test unit test suite
@@ -255,6 +256,7 @@ Controls: **Space** = pause/resume, **N** = advance one step while paused, close
 | `--output <dir>` | CSV/JSON output directory |
 | `--seed <n>` | RNG seed |
 | `--mc-samples <n>` | Monte Carlo samples per collision check |
+| `--path-smoothing` | Enable RRT shortcut path smoothing for this run |
 | `--python-compat` | Use `Multiagent CCRRT.py` planner settings |
 
 ## Project layout
@@ -308,7 +310,9 @@ Shipped defaults in `config/ccrrt.json` (override there without rebuilding):
 | Collision bound M | 0.2 | 0.2 |
 | Confidence alpha | 0.99 | 0.99 |
 | MC samples | 1000 | 1000 |
-| Max timesteps | 500 | 500 |
+| Max timesteps | 1000 | 500 |
+| Motion step (`motion_step`) | 0.2 | (one RRT edge per step) |
+| Path smoothing (`enable_path_smoothing`) | off | — |
 | Initial variance | 0.1 | 0.2 |
 | Process noise | 0.1 | 0.2 |
 | Measurement noise | 0.2 | 0.2 |

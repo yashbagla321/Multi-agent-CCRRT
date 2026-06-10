@@ -65,6 +65,18 @@ A config file is **required** at startup (auto-discovered or via `--config`).
 
 See `config/ccrrt.json` for per-field descriptions.
 
+### Path smoothing (`planner.enable_path_smoothing`)
+
+Optional **greedy shortcut smoothing** runs after each RRT plan: collinear waypoints are removed when a direct edge is still chance-constraint safe. This reduces zigzags in the planned path (separate from `motion_step`, which controls how finely the robot moves along each edge during execution).
+
+| Enable | How |
+|--------|-----|
+| Config | `"enable_path_smoothing": true` in `config/ccrrt.json` |
+| CLI | `--path-smoothing` |
+| Disable | `"enable_path_smoothing": false` in `config/ccrrt.json` (default) |
+
+Default: **off** (`false`). Re-run after changing — no rebuild needed.
+
 ---
 
 ## `config/scenarios.json` — scenario geometry
@@ -214,4 +226,5 @@ Inline `scenarios` entries replace the same-named entry from `scenarios_file`.
 | `--benchmark-all` | `run.benchmark_all = true` |
 | `--seed <n>` | `planner.rng_seed` |
 | `--mc-samples <n>` | `planner.mc_samples` |
+| `--path-smoothing` | `planner.enable_path_smoothing = true` |
 | `--python-compat` | `run.python_compat = true` (+ planner preset) |

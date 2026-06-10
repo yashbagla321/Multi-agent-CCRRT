@@ -25,6 +25,8 @@ TEST(RuntimeConfig, LoadsProjectConfigFile) {
     ASSERT_TRUE(config.has_value());
 
     EXPECT_DOUBLE_EQ(config->planner.expand_distance, 0.5);
+    EXPECT_DOUBLE_EQ(config->planner.motion_step, 0.2);
+    EXPECT_FALSE(config->planner.enable_path_smoothing);
     EXPECT_DOUBLE_EQ(config->planner.collision_bound_M, 0.2);
     EXPECT_EQ(config->run.scenario, "figure5");
     EXPECT_FALSE(config->scenarios.empty());

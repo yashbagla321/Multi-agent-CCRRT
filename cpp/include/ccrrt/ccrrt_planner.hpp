@@ -87,6 +87,17 @@ private:
         const RRTNode& node,
         const std::vector<StaticObstacle>& static_obstacles) const;
 
+    /**
+     * @brief Greedy shortcut smoothing: skips intermediate waypoints when a direct edge is safe.
+     */
+    Trajectory shortcutSmooth(
+        const Trajectory& path,
+        const Vec2& goal,
+        const std::vector<StaticObstacle>& static_obstacles,
+        const std::vector<TrajectoryPrediction>& agent_predictions,
+        const std::vector<TrajectoryPrediction>& dynamic_predictions,
+        int time_offset) const;
+
     const PlannerConfig& config_;
     ICollisionChecker& collision_checker_;
     std::mt19937& rng_;

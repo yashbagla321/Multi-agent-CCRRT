@@ -17,6 +17,17 @@ struct PlannerConfig {
     /** @brief RRT steering distance / robot step size (paper: 0.5). */
     double expand_distance = 0.5;
 
+    /**
+     * @brief Distance traveled per simulation timestep during execution.
+     *
+     * Smaller values produce smoother executed paths (more steps per RRT edge).
+     * Set to 0 or a value >= expand_distance to move one full RRT edge per timestep.
+     */
+    double motion_step = 0.2;
+
+    /** @brief Greedy shortcut smoothing on extracted RRT paths before execution. */
+    bool enable_path_smoothing = false;
+
     /** @brief Upper bound M on total collision probability per time step (paper: 0.2). */
     double collision_bound_M = 0.2;
 

@@ -32,6 +32,12 @@ void parsePlannerConfig(const json& root, PlannerConfig& config) {
     if (root.contains("expand_distance")) {
         config.expand_distance = root["expand_distance"].get<double>();
     }
+    if (root.contains("motion_step")) {
+        config.motion_step = root["motion_step"].get<double>();
+    }
+    if (root.contains("enable_path_smoothing")) {
+        config.enable_path_smoothing = root["enable_path_smoothing"].get<bool>();
+    }
     if (root.contains("collision_bound_M")) {
         config.collision_bound_M = root["collision_bound_M"].get<double>();
     }
@@ -415,6 +421,8 @@ void applyCommandLineOverrides(AppConfig& config, int argc, char* argv[]) {
             config.planner.rng_seed = static_cast<unsigned int>(std::stoul(argv[++i]));
         } else if (arg == "--mc-samples" && i + 1 < argc) {
             config.planner.mc_samples = std::stoi(argv[++i]);
+        } else if (arg == "--path-smoothing") {
+            config.planner.enable_path_smoothing = true;
         } else if (arg == "--python-compat") {
             config.planner = pythonCompatPlannerConfig();
             config.run.python_compat = true;

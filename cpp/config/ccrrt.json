@@ -38,6 +38,12 @@
     "_expand_distance": "RRT step size (m). Default: 0.5",
     "expand_distance": 0.5,
 
+    "_motion_step": "Distance traveled per simulation timestep. Smaller = smoother paths (default: 0.2). Set 0 to use expand_distance.",
+    "motion_step": 0.2,
+
+    "_enable_path_smoothing": "Shortcut-smoothing of RRT paths before execution. Default: false. CLI: --path-smoothing to enable for one run",
+    "enable_path_smoothing": false,
+
     "_collision_bound_M": "Max collision probability per step (chance constraint M). Default: 0.2",
     "collision_bound_M": 0.2,
 
@@ -50,8 +56,8 @@
     "_max_iterations": "Max RRT iterations per plan. Default: 5000",
     "max_iterations": 5000,
 
-    "_max_timesteps": "Max simulation timesteps. Default: 500",
-    "max_timesteps": 500,
+    "_max_timesteps": "Max simulation timesteps. Default: 1000 (raised for finer motion_step)",
+    "max_timesteps": 1000,
 
     "_goal_sample_rate": "Goal-bias sampling rate (percent). Default: 5",
     "goal_sample_rate": 5,
