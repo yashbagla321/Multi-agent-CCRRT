@@ -1,0 +1,15 @@
+{
+  "_comment": "Preset matching Multiagent CCRRT.py — pass with --config config/python_compat.json",
+
+  "scenarios_file": "scenarios.json",
+
+  "run": {
+    "scenario": "python_reference",
+    "enable_visualization": true,
+    "python_compat": true
+  },
+
+  "planner": {
+    "rng_seed": 42
+  }
+}

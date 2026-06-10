@@ -18,6 +18,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(eigen)
 
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(json)
+
 add_library(ccrrt_core
     src/geometry.cpp
     src/kalman_filter.cpp
@@ -26,6 +34,7 @@ add_library(ccrrt_core
     src/ccrrt_planner.cpp
     src/multi_agent_planner.cpp
     src/trajectory_exporter.cpp
+    src/runtime_config.cpp
 )
 
 target_include_directories(ccrrt_core
@@ -33,7 +42,7 @@ target_include_directories(ccrrt_core
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(ccrrt_core PUBLIC Eigen3::Eigen)
+target_link_libraries(ccrrt_core PUBLIC Eigen3::Eigen nlohmann_json::nlohmann_json)
 
 if(CCRRT_ENABLE_VISUALIZATION)
     include(FindBundledSFML)
@@ -50,18 +59,9 @@ else()
     target_compile_definitions(ccrrt_core PUBLIC CCRRT_HAS_SFML=0)
 endif()
 
-add_library(ccrrt_scenarios
-    scenarios/paper_figures.cpp
-    scenarios/python_reference.cpp
-    scenarios/performance_scenarios.cpp
-    scenarios/scenarios.cpp
-)
-target_include_directories(ccrrt_scenarios PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(ccrrt_scenarios PUBLIC ccrrt_core)
-
 add_executable(multi_agent_ccrrt main.cpp)
 target_include_directories(multi_agent_ccrrt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(multi_agent_ccrrt PRIVATE ccrrt_scenarios ccrrt_core)
+target_link_libraries(multi_agent_ccrrt PRIVATE ccrrt_core)
 
 # Copy bundled SFML DLLs next to the executable on Windows.
 if(CCRRT_SFML_DLL_DIR)
@@ -73,6 +73,24 @@ if(CCRRT_SFML_DLL_DIR)
         COMMENT "Copying bundled SFML DLLs to output directory"
     )
 endif()
+
+add_custom_command(
+    TARGET multi_agent_ccrrt POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:multi_agent_ccrrt>/config"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/config/ccrrt.json"
+        "$<TARGET_FILE_DIR:multi_agent_ccrrt>/ccrrt.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/config/ccrrt.json"
+        "$<TARGET_FILE_DIR:multi_agent_ccrrt>/config/ccrrt.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/config/python_compat.json"
+        "$<TARGET_FILE_DIR:multi_agent_ccrrt>/config/python_compat.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/config/scenarios.json"
+        "$<TARGET_FILE_DIR:multi_agent_ccrrt>/config/scenarios.json"
+    COMMENT "Copying runtime config files next to executable"
+)
 
 if(MSVC)
     target_compile_options(ccrrt_core PRIVATE /W4)

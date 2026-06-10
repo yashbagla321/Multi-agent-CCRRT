@@ -56,6 +56,23 @@ cmake --build build --config Release
 ./build/Release/multi_agent_ccrrt.exe --scenario figure7 --seed 42 --output output/figure7
 ```
 
+### Runtime configuration (no rebuild)
+
+Edit `config/ccrrt.json` (planner/run settings) and `config/scenarios.json` (obstacle positions, agent starts/goals, dynamic paths). Re-run the executable — no compile step needed.
+
+```powershell
+# Auto-loads config/ccrrt.json when present
+./build/Release/multi_agent_ccrrt.exe --no-viz
+
+# Explicit preset (Python prototype compatibility)
+./build/Release/multi_agent_ccrrt.exe --config config/python_compat.json --no-viz
+
+# CLI overrides config
+./build/Release/multi_agent_ccrrt.exe --mc-samples 100 --seed 42
+```
+
+See **[CONFIG.md](CONFIG.md)** for the full JSON schema. Recent changes are listed in **[CHANGELOG.md](CHANGELOG.md)**.
+
 ### Performance benchmarks
 
 Six additional scenarios in `scenarios/performance_scenarios.cpp` stress different bottlenecks:
@@ -111,7 +128,8 @@ Preview window legend:
 
 | Flag | Description |
 |------|-------------|
-| `--scenario` | Any name from `--list-scenarios` |
+| `--config <file>` | Load JSON config (default: `config/ccrrt.json` if present) |
+| `--scenario` | Any name from `--list-scenarios` (built-in or config-defined) |
 | `--benchmark-all` | Run all `perf_*` scenarios; write `benchmark.csv` |
 | `--preview` | Show scenario layout only; skip simulation |
 | `--preview-all` | Preview all scenarios in sequence |
@@ -120,14 +138,18 @@ Preview window legend:
 | `--output <dir>` | CSV/JSON output directory |
 | `--seed <n>` | RNG seed |
 | `--mc-samples <n>` | Monte Carlo samples per collision check |
+| `--python-compat` | Use `Multiagent CCRRT.py` planner settings |
 
 ## Project layout
 
 ```
 include/ccrrt/     Public headers (Doxygen-documented)
 src/               Core library implementation
-scenarios/         Paper figures + performance benchmarks
+config/            Runtime JSON: ccrrt.json, scenarios.json, python_compat.json
+scenarios/         Legacy headers only (geometry is in config/scenarios.json)
 main.cpp           CLI entry point
+CONFIG.md          Runtime configuration reference
+CHANGELOG.md       Recent feature and fix history
 ARCHITECTURE.md    System design, data flow, and paper mapping
 Doxyfile           API documentation generator config
 ```
@@ -165,9 +187,12 @@ doxygen Doxyfile
 | Collision bound M | 0.2 |
 | Confidence alpha | 0.99 |
 | MC samples | 1000 |
+| Max timesteps | 500 |
 | Initial variance | 0.2 |
 | Process noise | 0.2 |
 | Measurement noise | 0.2 |
+
+All of the above can be changed in `config/ccrrt.json` without rebuilding.
 
 ## Output
 

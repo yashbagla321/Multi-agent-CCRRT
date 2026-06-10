@@ -29,6 +29,9 @@ struct PlannerConfig {
     /** @brief Maximum RRT iterations before declaring planning failure. */
     int max_iterations = 5000;
 
+    /** @brief Maximum simulation timesteps before termination (Algorithm 2). */
+    int max_timesteps = 500;
+
     /** @brief Goal-biased sampling rate in percent [0, 100] (paper uses 5%). */
     int goal_sample_rate = 5;
 

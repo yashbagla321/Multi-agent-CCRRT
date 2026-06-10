@@ -1,0 +1,36 @@
+{
+  "_comment": "Edit this file and re-run the executable — no rebuild required. CLI flags override these values.",
+
+  "scenarios_file": "scenarios.json",
+
+  "run": {
+    "scenario": "figure5",
+    "output_directory": "",
+    "enable_visualization": true,
+    "preview_only": false,
+    "preview_all": false,
+    "list_scenarios": false,
+    "benchmark_all": false,
+    "python_compat": false
+  },
+
+  "planner": {
+    "expand_distance": 0.5,
+    "collision_bound_M": 0.2,
+    "confidence_alpha": 0.99,
+    "mc_samples": 1000,
+    "max_iterations": 5000,
+    "max_timesteps": 500,
+    "goal_sample_rate": 5,
+    "initial_variance": 0.2,
+    "process_noise": 0.2,
+    "max_prediction_variance": 0.8,
+    "measurement_noise": 0.2,
+    "bounds_min": -2.0,
+    "bounds_max": 17.0,
+    "rng_seed": 42,
+    "use_legacy_collision": false,
+    "legacy_p_safe": 0.8,
+    "variance_growth_alpha": 0.1
+  }
+}

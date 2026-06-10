@@ -49,7 +49,7 @@ flowchart TB
 
 | Layer | Directory | Responsibility |
 |-------|-----------|----------------|
-| Application | `main.cpp`, `scenarios/` | CLI, scenario selection, orchestration |
+| Application | `main.cpp`, `scenarios/`, `config/` | CLI, JSON config, scenario selection |
 | Planning | `multi_agent_planner.*`, `ccrrt_planner.*` | Algorithms 1 & 2, RRT tree growth |
 | Core | `collision_checker.*`, `kalman_filter.*`, `geometry.*`, `types.hpp`, `config.hpp` | Math, uncertainty, chance constraints |
 | I/O | `trajectory_exporter.*`, `sfml_renderer.*` | File export and optional visualization |
@@ -324,11 +324,16 @@ cpp/
 │   ├── ccrrt_planner.hpp             Single-agent CC-RRT
 │   ├── multi_agent_planner.hpp       Algorithms 1 & 2 coordinator
 │   ├── trajectory_exporter.hpp       CSV / JSON export
+│   ├── runtime_config.hpp            JSON config loader
+│   ├── legacy_collision_checker.hpp  Python-style deterministic checks
 │   └── sfml_renderer.hpp             Optional visualization
 ├── src/                              Implementations (mirror headers)
+├── config/
+│   ├── ccrrt.json                    Runtime parameters (no rebuild)
+│   └── python_compat.json            Python prototype preset
 └── scenarios/
-    ├── paper_figures.hpp
-    └── paper_figures.cpp             figure5, figure6, figure7 environments
+    ├── paper_figures.cpp             figure5, figure6, figure7
+    └── python_reference.cpp          Multiagent CCRRT.py test case
 ```
 
 ---
@@ -339,11 +344,12 @@ The design supports future work without rewriting the core:
 
 | Extension | How |
 |-----------|-----|
-| New scenarios | Add a factory in `paper_figures.cpp`, register in `allScenarios()` |
+| New scenarios | Add a factory in `scenarios/`, register in `allScenarios()`, **or** define in `config/ccrrt.json` |
+| Tune parameters without rebuild | Edit `config/ccrrt.json` (see **CONFIG.md**) |
 | Preview scenarios without sim | `multi_agent_ccrrt --scenario figure5 --preview` (requires SFML) |
-| Different collision model | Implement `ICollisionChecker`, inject into `CCRRTPlanner` |
+| Different collision model | Implement `ICollisionChecker`; select via `use_legacy_collision` in config |
+| Python prototype parity | `--python-compat` or `config/python_compat.json` + `python_reference` scenario |
 | RRT* / Dubins-RRT | Replace or wrap `CCRRTPlanner` behind a common interface |
-| JSON/YAML scenarios | Build `Environment` from file in `main.cpp` instead of hardcoded factories |
 | ROS 2 wrapper | Thin node that fills `Environment` from topics and calls `MultiAgentPlanner::run()` |
 | Unit tests | Test `geometry`, `KalmanFilter`, and `MonteCarloCollisionChecker` in isolation with fixed RNG seeds |
 

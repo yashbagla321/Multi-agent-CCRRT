@@ -201,10 +201,9 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
     }
 
     int timestep = 0;
-    const int max_timesteps = 500;
 
     // Algorithm 2: receding horizon execution loop.
-    while (!allAgentsAtGoal(agents) && timestep < max_timesteps) {
+    while (!allAgentsAtGoal(agents) && timestep < config_.max_timesteps) {
         for (auto& agent : agents) {
             if (agent.at_goal) {
                 continue;

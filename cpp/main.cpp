@@ -5,9 +5,9 @@
 
 #include "ccrrt/config.hpp"
 #include "ccrrt/multi_agent_planner.hpp"
+#include "ccrrt/runtime_config.hpp"
 #include "ccrrt/sfml_renderer.hpp"
 #include "ccrrt/trajectory_exporter.hpp"
-#include "scenarios/scenarios.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -18,11 +18,12 @@
 namespace {
 
 void printUsage() {
-    std::cout << "Usage: multi_agent_ccrrt --scenario <name> [options]\n"
-              << "\nPaper scenarios:    figure5, figure6, figure7, python_reference\n"
-              << "Performance tests:    perf_cluttered, perf_four_agents, perf_narrow_passage,\n"
-              << "                      perf_long_paths, perf_multi_dynamic, perf_stress\n"
+    std::cout << "Usage: multi_agent_ccrrt [options]\n"
+              << "\nConfiguration (no rebuild needed):\n"
+              << "  --config <file>    Load ccrrt.json (default: config/ccrrt.json if present)\n"
+              << "  Scenarios live in config/scenarios.json (see scenarios_file in ccrrt.json).\n"
               << "\nOptions:\n"
+              << "  --scenario <name>  Scenario to run (overrides config)\n"
               << "  --preview          Visualize scenario layout only (no simulation)\n"
               << "  --preview-all      Preview all scenarios in sequence\n"
               << "  --list-scenarios   Print available scenarios and descriptions\n"
@@ -31,26 +32,18 @@ void printUsage() {
               << "  --output <dir>     Output directory (default: output/<scenario>)\n"
               << "  --seed <n>         RNG seed (default: 42)\n"
               << "  --mc-samples <n>   Monte Carlo samples (default: 1000)\n"
-              << "  --python-compat    Use Multiagent CCRRT.py planner settings\n";
+              << "  --python-compat    Use Multiagent CCRRT.py planner settings\n"
+              << "\nSee CONFIG.md for the full JSON schema.\n";
 }
 
-std::optional<ccrrt::ScenarioEntry> findScenario(const std::string& name) {
-    for (const auto& scenario : ccrrt::allScenarios()) {
-        if (scenario.name == name) {
-            return scenario;
-        }
-    }
-    return std::nullopt;
-}
-
-void printScenarioList() {
+void printScenarioList(const ccrrt::ScenarioRegistry& registry) {
     std::cout << std::left;
     std::cout << "\nPaper scenarios:\n";
-    for (const auto& scenario : ccrrt::paperScenarios()) {
+    for (const auto& scenario : registry.paperScenarios()) {
         std::cout << "  " << std::setw(22) << scenario.name << scenario.description << '\n';
     }
     std::cout << "\nPerformance scenarios:\n";
-    for (const auto& scenario : ccrrt::performanceScenarios()) {
+    for (const auto& scenario : registry.performanceScenarios()) {
         std::cout << "  " << std::setw(22) << scenario.name << scenario.description << '\n';
     }
     std::cout << '\n';
@@ -63,6 +56,29 @@ void printResultSummary(const ccrrt::SimulationResult& result) {
     std::cout << "Replans:      " << result.replan_count << '\n';
     std::cout << "Total steps:  " << result.total_steps << '\n';
     std::cout << "Max timestep: " << result.max_timestep << '\n';
+}
+
+ccrrt::AppConfig loadConfiguration(int argc, char* argv[]) {
+    ccrrt::AppConfig app;
+
+    bool explicit_config = false;
+    const std::string config_path = ccrrt::resolveConfigFilePath(argc, argv, explicit_config);
+    if (!config_path.empty()) {
+        const std::optional<ccrrt::AppConfig> loaded = ccrrt::loadAppConfigFromFile(config_path);
+        if (loaded.has_value()) {
+            app = *loaded;
+            std::cout << "Loaded config: " << config_path << '\n';
+        } else if (explicit_config) {
+            std::cerr << "Aborting due to config load failure.\n";
+            std::exit(1);
+        }
+    } else {
+        std::cerr << "No config file found. Create config/ccrrt.json or pass --config <file>.\n";
+        std::exit(1);
+    }
+
+    ccrrt::applyCommandLineOverrides(app, argc, argv);
+    return app;
 }
 
 #if CCRRT_HAS_SFML
@@ -110,8 +126,11 @@ int runSingleScenario(
     return result.success ? 0 : 2;
 }
 
-int runBenchmarkAll(ccrrt::PlannerConfig config, const std::string& output_directory) {
-    const auto scenarios = ccrrt::benchmarkScenarios();
+int runBenchmarkAll(
+    const ccrrt::ScenarioRegistry& registry,
+    ccrrt::PlannerConfig config,
+    const std::string& output_directory) {
+    const auto scenarios = registry.benchmarkScenarios();
     std::vector<ccrrt::SimulationResult> results;
     results.reserve(scenarios.size());
 
@@ -153,61 +172,40 @@ int runBenchmarkAll(ccrrt::PlannerConfig config, const std::string& output_direc
     return 0;
 }
 
+bool hasHelpFlag(int argc, char* argv[]) {
+    for (int i = 1; i < argc; ++i) {
+        const std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace
 
 int main(int argc, char* argv[]) {
-    std::string scenario_name = "figure5";
-    std::string output_directory;
-    bool enable_visualization = true;
-    bool preview_only = false;
-    bool preview_all = false;
-    bool list_scenarios = false;
-    bool benchmark_all = false;
-    ccrrt::PlannerConfig config;
-    bool python_compat = false;
-
-    for (int i = 1; i < argc; ++i) {
-        const std::string arg = argv[i];
-        if (arg == "--scenario" && i + 1 < argc) {
-            scenario_name = argv[++i];
-        } else if (arg == "--preview") {
-            preview_only = true;
-        } else if (arg == "--preview-all") {
-            preview_all = true;
-        } else if (arg == "--list-scenarios") {
-            list_scenarios = true;
-        } else if (arg == "--benchmark-all") {
-            benchmark_all = true;
-            enable_visualization = false;
-        } else if (arg == "--no-viz") {
-            enable_visualization = false;
-        } else if (arg == "--output" && i + 1 < argc) {
-            output_directory = argv[++i];
-        } else if (arg == "--seed" && i + 1 < argc) {
-            config.rng_seed = static_cast<unsigned int>(std::stoul(argv[++i]));
-        } else if (arg == "--mc-samples" && i + 1 < argc) {
-            config.mc_samples = std::stoi(argv[++i]);
-        } else if (arg == "--python-compat") {
-            config = ccrrt::pythonCompatPlannerConfig();
-            python_compat = true;
-        } else if (arg == "--help" || arg == "-h") {
-            printUsage();
-            return 0;
-        } else {
-            std::cerr << "Unknown argument: " << arg << '\n';
-            printUsage();
-            return 1;
-        }
-    }
-
-    if (list_scenarios) {
-        printScenarioList();
+    if (hasHelpFlag(argc, argv)) {
+        printUsage();
         return 0;
     }
 
-    if (preview_all) {
+    const ccrrt::AppConfig app = loadConfiguration(argc, argv);
+    const ccrrt::ScenarioRegistry registry = ccrrt::makeScenarioRegistry(app);
+
+    if (app.scenarios.empty()) {
+        std::cerr << "No scenarios loaded. Check scenarios_file in your config.\n";
+        return 1;
+    }
+
+    if (app.run.list_scenarios) {
+        printScenarioList(registry);
+        return 0;
+    }
+
+    if (app.run.preview_all) {
 #if CCRRT_HAS_SFML
-        for (const auto& scenario : ccrrt::allScenarios()) {
+        for (const auto& scenario : registry.all()) {
             previewScenario(scenario);
         }
         return 0;
@@ -217,21 +215,22 @@ int main(int argc, char* argv[]) {
 #endif
     }
 
-    if (benchmark_all) {
+    if (app.run.benchmark_all) {
+        std::string output_directory = app.run.output_directory;
         if (output_directory.empty()) {
             output_directory = "output/benchmark";
         }
-        return runBenchmarkAll(config, output_directory);
+        return runBenchmarkAll(registry, app.planner, output_directory);
     }
 
-    const std::optional<ccrrt::ScenarioEntry> selected = findScenario(scenario_name);
+    const std::optional<ccrrt::ScenarioEntry> selected = registry.find(app.run.scenario);
     if (!selected.has_value()) {
-        std::cerr << "Unknown scenario: " << scenario_name << '\n';
+        std::cerr << "Unknown scenario: " << app.run.scenario << '\n';
         printUsage();
         return 1;
     }
 
-    if (preview_only) {
+    if (app.run.preview_only) {
 #if CCRRT_HAS_SFML
         previewScenario(*selected);
         return 0;
@@ -241,13 +240,18 @@ int main(int argc, char* argv[]) {
 #endif
     }
 
+    std::string output_directory = app.run.output_directory;
     if (output_directory.empty()) {
-        output_directory = "output/" + scenario_name;
+        output_directory = "output/" + app.run.scenario;
     }
 
-    if (python_compat) {
+    if (app.run.python_compat) {
         std::cout << "Python-compat mode: legacy collision, expand=1.0, max_iter=500\n";
     }
 
-    return runSingleScenario(*selected, config, output_directory, enable_visualization);
+    return runSingleScenario(
+        *selected,
+        app.planner,
+        output_directory,
+        app.run.enable_visualization);
 }
