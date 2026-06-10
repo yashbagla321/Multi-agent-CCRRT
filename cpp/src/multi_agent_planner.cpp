@@ -218,9 +218,7 @@ bool MultiAgentPlanner::lazyCheck(
         edge_variances,
         static_obstacles,
         agent_predictions,
-        dynamic_predictions,
-        config_.confidence_alpha,
-        config_.max_prediction_variance);
+        dynamic_predictions);
 }
 
 SimulationResult MultiAgentPlanner::run(

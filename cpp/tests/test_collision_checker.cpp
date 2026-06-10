@@ -98,9 +98,7 @@ TEST(MonteCarloCollisionChecker, SpanEdgeRejectsObstacleCrossingMidHorizon) {
         variances,
         env.static_obstacles,
         {},
-        {},
-        config.confidence_alpha,
-        config.max_prediction_variance);
+        {});
 
     EXPECT_FALSE(unsafe_span);
 
@@ -114,28 +112,4 @@ TEST(MonteCarloCollisionChecker, SpanEdgeRejectsObstacleCrossingMidHorizon) {
         0);
 
     EXPECT_FALSE(unsafe_single_step);
-}
-
-TEST(MonteCarloCollisionChecker, EdgeRejectedWhenOtherAgentBlocksSegment) {
-    auto config = fastTestPlannerConfig();
-    config.mc_samples = 500;
-    std::mt19937 rng(config.rng_seed);
-    MonteCarloCollisionChecker checker(config, rng);
-
-    ccrrt::TrajectoryPrediction other_agent;
-    other_agent.nodes = {
-        {0, {5.0, 5.0}, 0.2},
-        {1, {5.0, 5.0}, 0.2},
-    };
-
-    const bool safe = checker.isEdgeSafe(
-        {1.0, 5.0},
-        {9.0, 5.0},
-        0.2,
-        {},
-        {other_agent},
-        {},
-        0);
-
-    EXPECT_FALSE(safe);
 }

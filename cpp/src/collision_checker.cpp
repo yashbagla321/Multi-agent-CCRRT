@@ -17,37 +17,6 @@
 
 namespace ccrrt {
 
-namespace {
-
-double confidenceRadius(double variance, double confidence_alpha) {
-    const double clamped = std::max(variance, 1e-9);
-    return std::sqrt(clamped * chiSquaredThreshold2D(confidence_alpha));
-}
-
-bool edgeViolatesAgentClearance(
-    const Vec2& edge_start,
-    const Vec2& edge_end,
-    double robot_variance,
-    const std::vector<TrajectoryPrediction>& agent_predictions,
-    double confidence_alpha,
-    double max_prediction_variance) {
-    const double robot_radius = confidenceRadius(robot_variance, confidence_alpha);
-    for (const auto& prediction : agent_predictions) {
-        const std::size_t check_count = std::min<std::size_t>(prediction.nodes.size(), 2);
-        for (std::size_t i = 0; i < check_count; ++i) {
-            const auto& node = prediction.nodes[i];
-            const double other_variance = std::min(node.variance, max_prediction_variance);
-            const double other_radius = confidenceRadius(other_variance, confidence_alpha);
-            if (pointSegmentDistance(node.position, edge_start, edge_end) <= robot_radius + other_radius) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-}  // namespace
-
 MonteCarloCollisionChecker::MonteCarloCollisionChecker(const PlannerConfig& config, std::mt19937& rng)
     : config_(config), rng_(rng), normal_(0.0, 1.0) {}
 
@@ -187,16 +156,6 @@ bool MonteCarloCollisionChecker::isEdgeSafe(
         }
     }
 
-    if (edgeViolatesAgentClearance(
-            edge_start,
-            edge_end,
-            robot_variance,
-            agent_predictions,
-            config_.confidence_alpha,
-            config_.max_prediction_variance)) {
-        return false;
-    }
-
     return true;
 }
 
@@ -209,9 +168,7 @@ bool isSpanEdgeSafe(
     const std::vector<double>& variances_at_integer_times,
     const std::vector<StaticObstacle>& static_obstacles,
     const std::vector<TrajectoryPrediction>& agent_predictions,
-    const std::vector<TrajectoryPrediction>& dynamic_predictions,
-    double confidence_alpha,
-    double max_prediction_variance) {
+    const std::vector<TrajectoryPrediction>& dynamic_predictions) {
     if (time_end < time_start) {
         return false;
     }
@@ -290,18 +247,6 @@ bool isSpanEdgeSafe(
                 return false;
             }
         }
-    }
-
-    const double span_variance =
-        variances_at_integer_times.empty() ? 0.2 : variances_at_integer_times.back();
-    if (edgeViolatesAgentClearance(
-            edge_start,
-            edge_end,
-            span_variance,
-            agent_predictions,
-            confidence_alpha,
-            max_prediction_variance)) {
-        return false;
     }
 
     return true;
