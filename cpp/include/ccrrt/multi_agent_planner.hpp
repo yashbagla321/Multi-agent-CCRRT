@@ -88,8 +88,8 @@ private:
         const std::vector<StaticObstacle>& static_obstacles,
         const std::vector<TrajectoryPrediction>& dynamic_predictions) const;
 
-    /** @brief Wraps a planned trajectory as a broadcast prediction for other agents. */
-    TrajectoryPrediction makeAgentPrediction(const Trajectory& trajectory) const;
+    /** @brief Broadcast prediction anchored at the agent's current state. */
+    TrajectoryPrediction makeAgentPrediction(const AgentRuntime& agent) const;
 
     /** @brief Drops the first node, advancing a prediction one time step. */
     TrajectoryPrediction advancePrediction(const TrajectoryPrediction& prediction) const;

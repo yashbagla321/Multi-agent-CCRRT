@@ -117,7 +117,9 @@ Trajectory CCRRTPlanner::shortcutSmooth(
                     variances,
                     static_obstacles,
                     agent_predictions,
-                    dynamic_predictions)) {
+                    dynamic_predictions,
+                    config_.confidence_alpha,
+                    config_.max_prediction_variance)) {
                 best = j;
                 break;
             }

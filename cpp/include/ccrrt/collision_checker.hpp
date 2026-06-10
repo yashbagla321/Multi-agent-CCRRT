@@ -103,7 +103,9 @@ bool isSpanEdgeSafe(
     const std::vector<double>& variances_at_integer_times,
     const std::vector<StaticObstacle>& static_obstacles,
     const std::vector<TrajectoryPrediction>& agent_predictions,
-    const std::vector<TrajectoryPrediction>& dynamic_predictions);
+    const std::vector<TrajectoryPrediction>& dynamic_predictions,
+    double confidence_alpha,
+    double max_prediction_variance);
 
 /**
  * @brief Monte Carlo chance-constrained collision checker (paper Section 3.2).

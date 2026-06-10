@@ -90,9 +90,14 @@ std::vector<AgentRuntime> MultiAgentPlanner::initializeAgents(const Environment&
     return agents;
 }
 
-TrajectoryPrediction MultiAgentPlanner::makeAgentPrediction(const Trajectory& trajectory) const {
+TrajectoryPrediction MultiAgentPlanner::makeAgentPrediction(const AgentRuntime& agent) const {
     TrajectoryPrediction prediction;
-    prediction.nodes = trajectory.nodes;
+    if (agent.planned.empty()) {
+        return prediction;
+    }
+    prediction.nodes = agent.planned.nodes;
+    prediction.nodes.front().position = agent.state.mean;
+    prediction.nodes.front().variance = agent.state.variance;
     return prediction;
 }
 
@@ -117,7 +122,7 @@ std::vector<TrajectoryPrediction> MultiAgentPlanner::collectAgentPredictions(
         if (agent.spec.id == exclude_id || agent.planned.empty()) {
             continue;
         }
-        predictions.push_back(makeAgentPrediction(agent.planned));
+        predictions.push_back(makeAgentPrediction(agent));
     }
     return predictions;
 }
@@ -213,7 +218,9 @@ bool MultiAgentPlanner::lazyCheck(
         edge_variances,
         static_obstacles,
         agent_predictions,
-        dynamic_predictions);
+        dynamic_predictions,
+        config_.confidence_alpha,
+        config_.max_prediction_variance);
 }
 
 SimulationResult MultiAgentPlanner::run(
@@ -325,12 +332,33 @@ SimulationResult MultiAgentPlanner::run(
                 continue;
             }
 
-            // Record executed step at current position.
+            const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
+            Trajectory replanned = planner_.plan(
+                agent.state,
+                agent.spec.goal,
+                environment.static_obstacles,
+                agent_predictions,
+                dynamic_predictions,
+                0);
+
+            const bool lazy_safe =
+                lazyCheck(agent, agents, environment.static_obstacles, dynamic_predictions);
+
+            const bool adopt_replan =
+                !lazy_safe ||
+                (!replanned.empty() && replanned.nodes.size() < agent.planned.nodes.size());
+
+            if (adopt_replan && !replanned.empty()) {
+                agent.planned = replanned;
+                ++result.replan_count;
+            }
+
             ExecutedStep step;
             step.agent_id = agent.spec.id;
             step.timestep = timestep;
             step.position = agent.state.mean;
             step.variance = agent.state.variance;
+            step.replanned = adopt_replan && !replanned.empty();
             agent.executed.push_back(step);
 
             const Vec2 target = agent.planned.nodes[1].position;
@@ -344,32 +372,13 @@ SimulationResult MultiAgentPlanner::run(
             agent.state = kalman_.measurementUpdate(agent.state, measurement);
             agent.state.mean = next_position;
 
-            if (reached_waypoint) {
-                shiftTrajectory(agent.planned);
+            if (!agent.planned.empty()) {
+                agent.planned.nodes.front().position = agent.state.mean;
+                agent.planned.nodes.front().variance = agent.state.variance;
             }
 
-            // Lazy check + optional replan if unsafe or shorter path found.
-            const bool lazy_safe =
-                lazyCheck(agent, agents, environment.static_obstacles, dynamic_predictions);
-            const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
-            Trajectory replanned = planner_.plan(
-                agent.state,
-                agent.spec.goal,
-                environment.static_obstacles,
-                agent_predictions,
-                dynamic_predictions,
-                0);
-
-            const bool adopt_replan =
-                !lazy_safe ||
-                (!replanned.empty() && replanned.nodes.size() < agent.planned.nodes.size());
-
-            if (adopt_replan && !replanned.empty()) {
-                agent.planned = replanned;
-                ++result.replan_count;
-                if (!agent.executed.empty()) {
-                    agent.executed.back().replanned = true;
-                }
+            if (reached_waypoint) {
+                shiftTrajectory(agent.planned);
             }
 
             if (agent.state.mean.distance(agent.spec.goal) <= config_.expand_distance) {
