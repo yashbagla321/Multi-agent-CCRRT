@@ -9,6 +9,7 @@
 #include "ccrrt/collision_checker.hpp"
 #include "ccrrt/config.hpp"
 #include "ccrrt/kalman_filter.hpp"
+#include "ccrrt/simulation_observer.hpp"
 #include "ccrrt/types.hpp"
 
 #include <memory>
@@ -42,7 +43,29 @@ public:
      */
     SimulationResult run(const Environment& environment, const std::string& scenario_name);
 
+    /**
+     * @brief Runs simulation with optional per-timestep observer (live visualization).
+     * @param observer Receives frames after initial planning and each timestep; may abort.
+     */
+    SimulationResult run(
+        const Environment& environment,
+        const std::string& scenario_name,
+        ISimulationObserver* observer);
+
 private:
+    SimulationFrame buildFrame(
+        const Environment& environment,
+        const std::string& scenario_name,
+        int timestep,
+        const std::vector<AgentRuntime>& agents,
+        const std::vector<TrajectoryPrediction>& dynamic_predictions,
+        bool initial_plan_ready,
+        bool simulation_complete) const;
+
+    bool notifyObserver(
+        ISimulationObserver* observer,
+        const SimulationFrame& frame) const;
+
     /** @brief Creates runtime agent states sorted by ascending priority. */
     std::vector<AgentRuntime> initializeAgents(const Environment& environment) const;
 

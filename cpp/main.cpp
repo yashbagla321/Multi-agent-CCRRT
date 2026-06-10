@@ -7,10 +7,14 @@
 #include "ccrrt/multi_agent_planner.hpp"
 #include "ccrrt/runtime_config.hpp"
 #include "ccrrt/sfml_renderer.hpp"
+#if CCRRT_HAS_SFML
+#include "ccrrt/sfml_live_visualizer.hpp"
+#endif
 #include "ccrrt/trajectory_exporter.hpp"
 
 #include <iostream>
 #include <iomanip>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -28,7 +32,9 @@ void printUsage() {
               << "  --preview-all      Preview all scenarios in sequence\n"
               << "  --list-scenarios   Print available scenarios and descriptions\n"
               << "  --benchmark-all    Run all performance scenarios; write benchmark.csv\n"
-              << "  --no-viz           Disable SFML visualization after simulation\n"
+              << "  --no-viz           Disable all SFML visualization\n"
+              << "  --no-live-viz      Disable live step-by-step viz (keep post-run view)\n"
+              << "  --viz-delay-ms <n> Delay between live viz frames in ms (default: 150)\n"
               << "  --output <dir>     Output directory (default: output/<scenario>)\n"
               << "  --seed <n>         RNG seed (default: 42)\n"
               << "  --mc-samples <n>   Monte Carlo samples (default: 1000)\n"
@@ -92,14 +98,28 @@ int runSingleScenario(
     const ccrrt::ScenarioEntry& scenario,
     ccrrt::PlannerConfig config,
     const std::string& output_directory,
-    bool enable_visualization) {
+    bool enable_visualization,
+    bool live_visualization,
+    int viz_step_delay_ms) {
     std::cout << "Running scenario: " << scenario.name << '\n';
     if (!scenario.description.empty()) {
         std::cout << "  " << scenario.description << '\n';
     }
 
     ccrrt::MultiAgentPlanner planner(config);
+
+#if CCRRT_HAS_SFML
+    std::unique_ptr<ccrrt::SFMLLiveVisualizer> live_viz;
+    ccrrt::ISimulationObserver* observer = nullptr;
+    if (enable_visualization && live_visualization) {
+        live_viz = std::make_unique<ccrrt::SFMLLiveVisualizer>(scenario.name, viz_step_delay_ms);
+        observer = live_viz.get();
+    }
+    const ccrrt::SimulationResult result =
+        planner.run(scenario.environment, scenario.name, observer);
+#else
     const ccrrt::SimulationResult result = planner.run(scenario.environment, scenario.name);
+#endif
 
     ccrrt::TrajectoryExporter exporter;
     if (!exporter.exportCsv(result, output_directory)) {
@@ -113,7 +133,7 @@ int runSingleScenario(
     std::cout << "Output:       " << output_directory << '\n';
 
 #if CCRRT_HAS_SFML
-    if (enable_visualization) {
+    if (enable_visualization && !live_visualization) {
         ccrrt::SFMLRenderer renderer;
         renderer.renderSimulationResult(scenario.environment, result);
     }
@@ -253,5 +273,7 @@ int main(int argc, char* argv[]) {
         *selected,
         app.planner,
         output_directory,
-        app.run.enable_visualization);
+        app.run.enable_visualization,
+        app.run.live_visualization,
+        app.run.viz_step_delay_ms);
 }

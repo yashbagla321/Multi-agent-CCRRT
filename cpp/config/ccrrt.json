@@ -7,6 +7,8 @@
     "scenario": "figure5",
     "output_directory": "",
     "enable_visualization": true,
+    "live_visualization": true,
+    "viz_step_delay_ms": 150,
     "preview_only": false,
     "preview_all": false,
     "list_scenarios": false,

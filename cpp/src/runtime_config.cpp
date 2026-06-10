@@ -96,6 +96,12 @@ void parseRunSettings(const json& root, RunSettings& run) {
     if (root.contains("enable_visualization")) {
         run.enable_visualization = root["enable_visualization"].get<bool>();
     }
+    if (root.contains("live_visualization")) {
+        run.live_visualization = root["live_visualization"].get<bool>();
+    }
+    if (root.contains("viz_step_delay_ms")) {
+        run.viz_step_delay_ms = root["viz_step_delay_ms"].get<int>();
+    }
     if (root.contains("preview_only")) {
         run.preview_only = root["preview_only"].get<bool>();
     }
@@ -399,6 +405,10 @@ void applyCommandLineOverrides(AppConfig& config, int argc, char* argv[]) {
             config.run.enable_visualization = false;
         } else if (arg == "--no-viz") {
             config.run.enable_visualization = false;
+        } else if (arg == "--no-live-viz") {
+            config.run.live_visualization = false;
+        } else if (arg == "--viz-delay-ms" && i + 1 < argc) {
+            config.run.viz_step_delay_ms = std::stoi(argv[++i]);
         } else if (arg == "--output" && i + 1 < argc) {
             config.run.output_directory = argv[++i];
         } else if (arg == "--seed" && i + 1 < argc) {

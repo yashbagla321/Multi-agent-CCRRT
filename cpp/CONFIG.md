@@ -69,7 +69,9 @@ A config file is **required** at startup (auto-discovered or via `--config`).
 |-------|------|---------|-------------|
 | `scenario` | string | `"figure5"` | Name from `scenarios.json` |
 | `output_directory` | string | `""` | Empty → `output/<scenario>` |
-| `enable_visualization` | bool | `true` | SFML window after simulation |
+| `enable_visualization` | bool | `true` | Master switch for SFML visualization |
+| `live_visualization` | bool | `true` | Step-by-step live window during simulation |
+| `viz_step_delay_ms` | int | `150` | Delay between live viz frames (milliseconds) |
 | `preview_only` | bool | `false` | Layout preview only |
 | `preview_all` | bool | `false` | Preview every scenario |
 | `list_scenarios` | bool | `false` | Print scenario list and exit |

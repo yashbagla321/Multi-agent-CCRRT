@@ -47,7 +47,7 @@ target_link_libraries(ccrrt_core PUBLIC Eigen3::Eigen nlohmann_json::nlohmann_js
 if(CCRRT_ENABLE_VISUALIZATION)
     include(FindBundledSFML)
     if(SFML_FOUND)
-        target_sources(ccrrt_core PRIVATE src/sfml_renderer.cpp)
+        target_sources(ccrrt_core PRIVATE src/sfml_renderer.cpp src/sfml_live_visualizer.cpp)
         target_compile_definitions(ccrrt_core PUBLIC CCRRT_HAS_SFML=1)
         target_link_libraries(ccrrt_core PUBLIC sfml-graphics sfml-window sfml-system)
     else()

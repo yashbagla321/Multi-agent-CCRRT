@@ -10,6 +10,7 @@
  */
 
 #include "ccrrt/multi_agent_planner.hpp"
+#include "ccrrt/simulation_observer.hpp"
 
 #include "ccrrt/legacy_collision_checker.hpp"
 
@@ -163,7 +164,58 @@ bool MultiAgentPlanner::lazyCheck(
         0);
 }
 
-SimulationResult MultiAgentPlanner::run(const Environment& environment, const std::string& scenario_name) {
+SimulationResult MultiAgentPlanner::run(
+    const Environment& environment,
+    const std::string& scenario_name) {
+    return run(environment, scenario_name, nullptr);
+}
+
+SimulationFrame MultiAgentPlanner::buildFrame(
+    const Environment& environment,
+    const std::string& scenario_name,
+    int timestep,
+    const std::vector<AgentRuntime>& agents,
+    const std::vector<TrajectoryPrediction>& dynamic_predictions,
+    bool initial_plan_ready,
+    bool simulation_complete) const {
+    SimulationFrame frame;
+    frame.scenario_name = scenario_name;
+    frame.timestep = timestep;
+    frame.initial_plan_ready = initial_plan_ready;
+    frame.simulation_complete = simulation_complete;
+    frame.environment = environment;
+    frame.dynamic_predictions = dynamic_predictions;
+    frame.agents.reserve(agents.size());
+
+    for (const auto& agent : agents) {
+        AgentSnapshot snapshot;
+        snapshot.spec = agent.spec;
+        snapshot.position = agent.state.mean;
+        snapshot.variance = agent.state.variance;
+        snapshot.at_goal = agent.at_goal;
+        snapshot.executed = agent.executed;
+        snapshot.planned = agent.planned;
+        if (!agent.executed.empty()) {
+            snapshot.replanned_this_step = agent.executed.back().replanned;
+        }
+        frame.agents.push_back(std::move(snapshot));
+    }
+    return frame;
+}
+
+bool MultiAgentPlanner::notifyObserver(
+    ISimulationObserver* observer,
+    const SimulationFrame& frame) const {
+    if (observer == nullptr) {
+        return true;
+    }
+    return observer->onFrame(frame);
+}
+
+SimulationResult MultiAgentPlanner::run(
+    const Environment& environment,
+    const std::string& scenario_name,
+    ISimulationObserver* observer) {
     const auto clock_start = std::chrono::steady_clock::now();
 
     SimulationResult result;
@@ -196,6 +248,20 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
     }
 
     if (!planInitialTrajectories(agents, environment, dynamic_predictions)) {
+        result.success = false;
+        return result;
+    }
+
+    if (!notifyObserver(
+            observer,
+            buildFrame(
+                environment,
+                scenario_name,
+                0,
+                agents,
+                dynamic_predictions,
+                true,
+                false))) {
         result.success = false;
         return result;
     }
@@ -265,6 +331,19 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
         }
 
         ++timestep;
+
+        if (!notifyObserver(
+                observer,
+                buildFrame(
+                    environment,
+                    scenario_name,
+                    timestep,
+                    agents,
+                    dynamic_predictions,
+                    false,
+                    allAgentsAtGoal(agents)))) {
+            break;
+        }
     }
 
     result.success = allAgentsAtGoal(agents);
@@ -279,6 +358,18 @@ SimulationResult MultiAgentPlanner::run(const Environment& environment, const st
 
     const auto clock_end = std::chrono::steady_clock::now();
     result.elapsed_ms = std::chrono::duration<double, std::milli>(clock_end - clock_start).count();
+
+    notifyObserver(
+        observer,
+        buildFrame(
+            environment,
+            scenario_name,
+            timestep,
+            agents,
+            dynamic_predictions,
+            false,
+            true));
+
     return result;
 }
 

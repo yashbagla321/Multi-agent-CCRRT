@@ -155,6 +155,24 @@ Preview window legend:
 - **Faint line** — start-to-goal hint (not the planned path)
 - **Magenta trail** — dynamic obstacle mean waypoints
 
+### Live simulation visualization
+
+When `live_visualization` is enabled (default), the planner opens an SFML window that updates after each timestep:
+
+- **Solid colored lines** — executed path so far
+- **Faint lines** — current receding-horizon plan
+- **Filled disc** — current agent position (gold ring = replanned this step)
+- **Magenta** — dynamic obstacle current position and predicted trail
+
+Controls: **Space** = pause/resume, **N** = advance one step while paused, close window = stop simulation.
+
+```powershell
+./build/Release/multi_agent_ccrrt.exe --scenario figure5
+./build/Release/multi_agent_ccrrt.exe --scenario figure5 --viz-delay-ms 50
+./build/Release/multi_agent_ccrrt.exe --scenario figure5 --no-live-viz   # post-run static view only
+./build/Release/multi_agent_ccrrt.exe --no-viz                             # no visualization
+```
+
 ### CLI options
 
 | Flag | Description |
@@ -165,7 +183,9 @@ Preview window legend:
 | `--preview` | Show scenario layout only; skip simulation |
 | `--preview-all` | Preview all scenarios in sequence |
 | `--list-scenarios` | Print scenario names and exit |
-| `--no-viz` | Skip SFML window after simulation |
+| `--no-viz` | Disable all SFML visualization |
+| `--no-live-viz` | Skip live step-by-step viz (keep post-run static view) |
+| `--viz-delay-ms <n>` | Milliseconds between live viz frames (default: 150) |
 | `--output <dir>` | CSV/JSON output directory |
 | `--seed <n>` | RNG seed |
 | `--mc-samples <n>` | Monte Carlo samples per collision check |
