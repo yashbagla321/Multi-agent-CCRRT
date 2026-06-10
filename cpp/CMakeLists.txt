@@ -97,3 +97,48 @@ if(MSVC)
 else()
     target_compile_options(ccrrt_core PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+# ---------------------------------------------------------------------------
+# Unit tests (Google Test)
+# ---------------------------------------------------------------------------
+option(CCRRT_BUILD_TESTS "Build unit tests" ON)
+
+if(CCRRT_BUILD_TESTS)
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.14.0
+        GIT_SHALLOW TRUE
+    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+
+    enable_testing()
+
+    add_executable(ccrrt_tests
+        tests/test_geometry.cpp
+        tests/test_kalman_filter.cpp
+        tests/test_types.cpp
+        tests/test_collision_checker.cpp
+        tests/test_legacy_collision_checker.cpp
+        tests/test_ccrrt_planner.cpp
+        tests/test_multi_agent_planner.cpp
+        tests/test_runtime_config.cpp
+        tests/test_trajectory_exporter.cpp
+    )
+
+    target_include_directories(ccrrt_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+    target_compile_definitions(ccrrt_tests PRIVATE
+        CCRRT_TEST_CONFIG_DIR="${CMAKE_CURRENT_SOURCE_DIR}/config"
+    )
+
+    target_link_libraries(ccrrt_tests PRIVATE ccrrt_core GTest::gtest_main)
+
+    include(GoogleTest)
+    gtest_discover_tests(ccrrt_tests)
+endif()

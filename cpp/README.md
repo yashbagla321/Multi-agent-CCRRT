@@ -101,6 +101,37 @@ Six additional scenarios in `scenarios/performance_scenarios.cpp` stress differe
 
 Use a lower `--mc-samples` value (e.g. 200) for faster iteration; use 1000 to match the paper.
 
+## Unit tests
+
+Google Test suite under `tests/` verifies geometry, Kalman filter, collision checkers, planners, JSON config loading, and export.
+
+```powershell
+cd cpp
+cmake -B build -DCCRRT_BUILD_TESTS=ON -DCCRRT_ENABLE_VISUALIZATION=OFF
+cmake --build build --config Release
+ctest --test-dir build -C Release --output-on-failure
+```
+
+Or run directly:
+
+```powershell
+./build/Release/ccrrt_tests.exe
+```
+
+| Test file | What it verifies |
+|-----------|------------------|
+| `test_geometry.cpp` | Distances, segment intersection, chi-squared thresholds |
+| `test_kalman_filter.cpp` | Predict/update variance, deterministic measurements |
+| `test_types.cpp` | Trajectory prediction variance growth, `Vec2` |
+| `test_collision_checker.cpp` | Monte Carlo node/edge safety |
+| `test_legacy_collision_checker.cpp` | Python-compatible deterministic checks |
+| `test_ccrrt_planner.cpp` | Single-agent plan success/failure |
+| `test_multi_agent_planner.cpp` | Multi-agent goals, metrics, legacy mode smoke |
+| `test_runtime_config.cpp` | JSON config + `figure5` integration |
+| `test_trajectory_exporter.cpp` | CSV/JSON/benchmark export |
+
+Disable tests: `-DCCRRT_BUILD_TESTS=OFF`.
+
 ### Preview scenarios (no simulation)
 
 Visualize layouts from `scenarios/` before running the planner.
