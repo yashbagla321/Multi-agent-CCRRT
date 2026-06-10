@@ -12,6 +12,7 @@
 #include "ccrrt/multi_agent_planner.hpp"
 #include "ccrrt/simulation_observer.hpp"
 
+#include "ccrrt/collision_checker.hpp"
 #include "ccrrt/legacy_collision_checker.hpp"
 
 #include <algorithm>
@@ -37,6 +38,25 @@ Vec2 advanceToward(const Vec2& from, const Vec2& to, double step_size) {
         return to;
     }
     return from + delta * (step_size / distance);
+}
+
+std::vector<double> variancesAlongPlannedEdge(
+    const TrajectoryNode& start_node,
+    const TrajectoryNode& end_node) {
+    const int time_start = start_node.time_step;
+    const int time_end = end_node.time_step;
+    const int span = time_end - time_start;
+    if (span <= 0) {
+        return {end_node.variance};
+    }
+
+    std::vector<double> variances;
+    variances.reserve(static_cast<std::size_t>(span + 1));
+    for (int time_index = time_start; time_index <= time_end; ++time_index) {
+        const double alpha = static_cast<double>(time_index - time_start) / static_cast<double>(span);
+        variances.push_back(start_node.variance * (1.0 - alpha) + end_node.variance * alpha);
+    }
+    return variances;
 }
 
 }  // namespace
@@ -108,11 +128,13 @@ bool MultiAgentPlanner::allAgentsAtGoal(const std::vector<AgentRuntime>& agents)
 }
 
 void MultiAgentPlanner::shiftTrajectory(Trajectory& trajectory) {
-    if (trajectory.nodes.size() > 1) {
-        trajectory.nodes.erase(trajectory.nodes.begin());
-        for (std::size_t i = 0; i < trajectory.nodes.size(); ++i) {
-            trajectory.nodes[i].time_step = static_cast<int>(i);
-        }
+    if (trajectory.nodes.size() <= 1) {
+        return;
+    }
+    const int time_delta = trajectory.nodes[1].time_step - trajectory.nodes[0].time_step;
+    trajectory.nodes.erase(trajectory.nodes.begin());
+    for (auto& node : trajectory.nodes) {
+        node.time_step -= time_delta;
     }
 }
 
@@ -171,17 +193,22 @@ bool MultiAgentPlanner::lazyCheck(
 
     const Vec2 edge_start = agent.state.mean;
     const Vec2 edge_end = agent.planned.nodes[1].position;
-    const double variance = agent.planned.nodes[1].variance;
+    const int time_start = agent.planned.nodes[0].time_step;
+    const int time_end = agent.planned.nodes[1].time_step;
+    const auto variances =
+        variancesAlongPlannedEdge(agent.planned.nodes[0], agent.planned.nodes[1]);
 
     const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
-    return collision_checker_->isEdgeSafe(
+    return isSpanEdgeSafe(
+        *collision_checker_,
         edge_start,
         edge_end,
-        variance,
+        time_start,
+        time_end,
+        variances,
         static_obstacles,
         agent_predictions,
-        dynamic_predictions,
-        0);
+        dynamic_predictions);
 }
 
 SimulationResult MultiAgentPlanner::run(

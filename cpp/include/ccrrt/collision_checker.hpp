@@ -85,6 +85,27 @@ public:
 };
 
 /**
+ * @brief Validates an edge that may span multiple discrete prediction timesteps.
+ *
+ * Used by path shortcut smoothing and lazy collision checks when waypoints are
+ * merged. Checks chance constraints at every integer time in (time_start, time_end]
+ * and segment intersections for each prediction step in [time_start, time_end).
+ *
+ * @param variances_at_integer_times Variances at times time_start, time_start+1, …, time_end
+ *        (length must be time_end - time_start + 1).
+ */
+bool isSpanEdgeSafe(
+    const ICollisionChecker& checker,
+    const Vec2& edge_start,
+    const Vec2& edge_end,
+    int time_start,
+    int time_end,
+    const std::vector<double>& variances_at_integer_times,
+    const std::vector<StaticObstacle>& static_obstacles,
+    const std::vector<TrajectoryPrediction>& agent_predictions,
+    const std::vector<TrajectoryPrediction>& dynamic_predictions);
+
+/**
  * @brief Monte Carlo chance-constrained collision checker (paper Section 3.2).
  *
  * Uses mc_samples draws from the robot's Gaussian and alpha-confidence sets

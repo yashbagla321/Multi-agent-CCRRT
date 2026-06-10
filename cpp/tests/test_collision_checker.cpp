@@ -80,3 +80,36 @@ TEST(MonteCarloCollisionChecker, EdgeAroundObstacleAccepted) {
 
     EXPECT_TRUE(safe);
 }
+
+TEST(MonteCarloCollisionChecker, SpanEdgeRejectsObstacleCrossingMidHorizon) {
+    auto config = fastTestPlannerConfig();
+    std::mt19937 rng(config.rng_seed);
+    MonteCarloCollisionChecker checker(config, rng);
+
+    const auto env = staticObstacleOnlyEnvironment();
+    const std::vector<double> variances = {0.2, 0.2, 0.2, 0.2};
+
+    const bool unsafe_span = isSpanEdgeSafe(
+        checker,
+        {1.0, 5.0},
+        {9.0, 5.0},
+        0,
+        3,
+        variances,
+        env.static_obstacles,
+        {},
+        {});
+
+    EXPECT_FALSE(unsafe_span);
+
+    const bool unsafe_single_step = checker.isEdgeSafe(
+        {1.0, 5.0},
+        {9.0, 5.0},
+        0.2,
+        env.static_obstacles,
+        {},
+        {},
+        0);
+
+    EXPECT_FALSE(unsafe_single_step);
+}

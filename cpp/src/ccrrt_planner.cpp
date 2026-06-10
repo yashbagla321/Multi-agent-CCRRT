@@ -100,22 +100,31 @@ Trajectory CCRRTPlanner::shortcutSmooth(
     while (anchor < path.nodes.size() - 1) {
         std::size_t best = anchor + 1;
         for (std::size_t j = path.nodes.size() - 1; j > anchor + 1; --j) {
-            const int horizon_index = time_offset + static_cast<int>(smoothed.nodes.size());
-            if (collision_checker_.isEdgeSafe(
+            std::vector<double> variances;
+            variances.reserve(j - anchor + 1);
+            for (std::size_t t = anchor; t <= j; ++t) {
+                variances.push_back(path.nodes[t].variance);
+            }
+
+            const int time_start = time_offset + static_cast<int>(anchor);
+            const int time_end = time_offset + static_cast<int>(j);
+            if (isSpanEdgeSafe(
+                    collision_checker_,
                     smoothed.nodes.back().position,
                     path.nodes[j].position,
-                    path.nodes[j].variance,
+                    time_start,
+                    time_end,
+                    variances,
                     static_obstacles,
                     agent_predictions,
-                    dynamic_predictions,
-                    horizon_index)) {
+                    dynamic_predictions)) {
                 best = j;
                 break;
             }
         }
 
         TrajectoryNode node = path.nodes[best];
-        node.time_step = static_cast<int>(smoothed.nodes.size());
+        node.time_step = static_cast<int>(best);
         smoothed.nodes.push_back(node);
         anchor = best;
     }
@@ -123,13 +132,10 @@ Trajectory CCRRTPlanner::shortcutSmooth(
     if (smoothed.nodes.back().position.distance(goal) > 1e-6 &&
         path.nodes.back().position.distance(goal) <= 1e-6) {
         TrajectoryNode goal_node = path.nodes.back();
-        goal_node.time_step = static_cast<int>(smoothed.nodes.size());
+        goal_node.time_step = static_cast<int>(path.nodes.size() - 1);
         smoothed.nodes.push_back(goal_node);
     }
 
-    for (std::size_t i = 0; i < smoothed.nodes.size(); ++i) {
-        smoothed.nodes[i].time_step = static_cast<int>(i);
-    }
     return smoothed;
 }
 

@@ -159,4 +159,97 @@ bool MonteCarloCollisionChecker::isEdgeSafe(
     return true;
 }
 
+bool isSpanEdgeSafe(
+    const ICollisionChecker& checker,
+    const Vec2& edge_start,
+    const Vec2& edge_end,
+    int time_start,
+    int time_end,
+    const std::vector<double>& variances_at_integer_times,
+    const std::vector<StaticObstacle>& static_obstacles,
+    const std::vector<TrajectoryPrediction>& agent_predictions,
+    const std::vector<TrajectoryPrediction>& dynamic_predictions) {
+    if (time_end < time_start) {
+        return false;
+    }
+
+    const int span = time_end - time_start;
+    if (span == 0) {
+        GaussianState endpoint;
+        endpoint.mean = edge_end;
+        endpoint.variance = variances_at_integer_times.empty() ? 0.2 : variances_at_integer_times.back();
+        return checker.isNodeSafe(
+            endpoint,
+            static_obstacles,
+            agent_predictions,
+            dynamic_predictions,
+            time_end);
+    }
+
+    if (span == 1) {
+        if (variances_at_integer_times.size() < 2) {
+            return false;
+        }
+        return checker.isEdgeSafe(
+            edge_start,
+            edge_end,
+            variances_at_integer_times[1],
+            static_obstacles,
+            agent_predictions,
+            dynamic_predictions,
+            time_start);
+    }
+
+    if (static_cast<int>(variances_at_integer_times.size()) != span + 1) {
+        return false;
+    }
+
+    for (const auto& obstacle : static_obstacles) {
+        if (pointSegmentDistance(obstacle.center, edge_start, edge_end) <= obstacle.radius) {
+            return false;
+        }
+    }
+
+    for (int time_index = time_start + 1; time_index <= time_end; ++time_index) {
+        const double alpha =
+            static_cast<double>(time_index - time_start) / static_cast<double>(span);
+        GaussianState sample_state;
+        sample_state.mean = edge_start + (edge_end - edge_start) * alpha;
+        sample_state.variance = variances_at_integer_times[static_cast<std::size_t>(time_index - time_start)];
+        if (!checker.isNodeSafe(
+                sample_state,
+                static_obstacles,
+                agent_predictions,
+                dynamic_predictions,
+                time_index)) {
+            return false;
+        }
+    }
+
+    for (int time_index = time_start; time_index < time_end; ++time_index) {
+        for (const auto& prediction : agent_predictions) {
+            if (prediction.nodes.size() < 2) {
+                continue;
+            }
+            const TrajectoryNode first = prediction.nodeAt(static_cast<std::size_t>(time_index));
+            const TrajectoryNode second = prediction.nodeAt(static_cast<std::size_t>(time_index + 1));
+            if (segmentsIntersect(edge_start, edge_end, first.position, second.position)) {
+                return false;
+            }
+        }
+        for (const auto& prediction : dynamic_predictions) {
+            if (prediction.nodes.size() < 2) {
+                continue;
+            }
+            const TrajectoryNode first = prediction.nodeAt(static_cast<std::size_t>(time_index));
+            const TrajectoryNode second = prediction.nodeAt(static_cast<std::size_t>(time_index + 1));
+            if (segmentsIntersect(edge_start, edge_end, first.position, second.position)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 }  // namespace ccrrt

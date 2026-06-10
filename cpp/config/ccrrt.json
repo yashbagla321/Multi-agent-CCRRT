@@ -39,10 +39,10 @@
     "expand_distance": 0.5,
 
     "_motion_step": "Distance traveled per simulation timestep. Smaller = smoother paths (default: 0.2). Set 0 to use expand_distance.",
-    "motion_step": 0.2,
+    "motion_step": 0.5,
 
     "_enable_path_smoothing": "Shortcut-smoothing of RRT paths before execution. Default: false. CLI: --path-smoothing to enable for one run",
-    "enable_path_smoothing": false,
+    "enable_path_smoothing": true,
 
     "_collision_bound_M": "Max collision probability per step (chance constraint M). Default: 0.2",
     "collision_bound_M": 0.2,
