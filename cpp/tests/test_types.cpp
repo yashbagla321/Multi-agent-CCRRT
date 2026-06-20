@@ -25,5 +25,7 @@ TEST(Types, TrajectoryPrediction_NodeAtClampsPastEnd) {
 }
 
 TEST(Types, Vec2Distance) {
-    EXPECT_NEAR(Vec2{0, 0}.distance({3, 4}), 5.0, 1e-9);
+    const Vec2 origin{0, 0};
+    const Vec2 point{3, 4};
+    EXPECT_NEAR(origin.distance(point), 5.0, 1e-9);
 }

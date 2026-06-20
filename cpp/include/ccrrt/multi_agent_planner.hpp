@@ -12,6 +12,7 @@
 #include "ccrrt/simulation_observer.hpp"
 #include "ccrrt/types.hpp"
 
+#include <limits>
 #include <memory>
 
 namespace ccrrt {
@@ -100,7 +101,8 @@ private:
      */
     std::vector<TrajectoryPrediction> collectAgentPredictions(
         const std::vector<AgentRuntime>& agents,
-        int exclude_id) const;
+        int exclude_id,
+        int priority_limit = std::numeric_limits<int>::max()) const;
 
     /** @brief Returns true when every agent has reached its goal. */
     bool allAgentsAtGoal(const std::vector<AgentRuntime>& agents) const;

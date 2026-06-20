@@ -1,0 +1,20 @@
+{
+  "_scenarios_file": "Path to scenario definitions, relative to this file's directory.",
+  "scenarios_file": "scenarios.json",
+
+  "run": {
+    "_scenario": "Scenario matching Multiagent CCRRT.py main() geometry.",
+    "scenario": "python_reference",
+
+    "_enable_visualization": "Master switch for SFML visualization.",
+    "enable_visualization": true,
+
+    "_python_compat": "Enable legacy collision checker and Python-aligned planner settings.",
+    "python_compat": true
+  },
+
+  "planner": {
+    "_rng_seed": "RNG seed for reproducible comparison with the Python script.",
+    "rng_seed": 42
+  }
+}

@@ -310,11 +310,9 @@ Shipped defaults in `config/ccrrt.json` (override there without rebuilding):
 | Collision bound M | 0.2 | 0.2 |
 | Confidence alpha | 0.99 | 0.99 |
 | MC samples | 1000 | 1000 |
-| Max timesteps | 1000 | 500 |
-| Motion step (`motion_step`) | 0.2 | (one RRT edge per step) |
-| Path smoothing (`enable_path_smoothing`) | off | — |
-| Initial variance | 0.1 | 0.2 |
-| Process noise | 0.1 | 0.2 |
+| Max timesteps | 500 | 500 |
+| Initial variance | 0.2 | 0.2 |
+| Process noise | 0.2 | 0.2 |
 | Measurement noise | 0.2 | 0.2 |
 
 C++ fallbacks when a field is omitted from JSON are defined in `include/ccrrt/config.hpp`.
@@ -324,3 +322,16 @@ C++ fallbacks when a field is omitted from JSON are defined in `include/ccrrt/co
 Each run writes:
 - `trajectories.csv` — executed agent steps (position, variance, replanned flag per step)
 - `summary.json` — `success`, `replan_count`, `elapsed_ms`, `total_steps`, `max_timestep`, per-agent step counts
+
+## Replay viewer
+
+SFML remains the native live visualizer. For replay and inspection after a run,
+open `tools/replay_viewer.html` in a browser and select:
+
+- `output/<scenario>/trajectories.csv`
+- `output/<scenario>/summary.json`
+- `cpp/config/scenarios.json` for obstacles, starts, goals, and dynamic paths
+
+The viewer provides playback controls, uncertainty discs, replan markers, fitted
+workspace bounds, and optional scenario geometry without adding another build
+dependency.

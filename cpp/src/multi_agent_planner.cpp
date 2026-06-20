@@ -116,10 +116,13 @@ TrajectoryPrediction MultiAgentPlanner::advancePrediction(const TrajectoryPredic
 
 std::vector<TrajectoryPrediction> MultiAgentPlanner::collectAgentPredictions(
     const std::vector<AgentRuntime>& agents,
-    int exclude_id) const {
+    int exclude_id,
+    int priority_limit) const {
     std::vector<TrajectoryPrediction> predictions;
     for (const auto& agent : agents) {
-        if (agent.spec.id == exclude_id || agent.planned.empty()) {
+        if (agent.spec.id == exclude_id ||
+            agent.spec.priority >= priority_limit ||
+            agent.planned.empty()) {
             continue;
         }
         predictions.push_back(makeAgentPrediction(agent));
@@ -208,7 +211,8 @@ bool MultiAgentPlanner::lazyCheck(
         edge_variances.front() = agent.state.variance;
     }
 
-    const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
+    const auto agent_predictions =
+        collectAgentPredictions(agents, agent.spec.id, agent.spec.priority);
     return isSpanEdgeSafe(
         *collision_checker_,
         edge_start,
@@ -318,6 +322,24 @@ SimulationResult MultiAgentPlanner::run(
 
     int timestep = 0;
 
+    auto finishResult = [&](bool success) {
+        result.success = success && allAgentsAtGoal(agents);
+        result.agent_paths.resize(agents.size());
+        result.total_steps = 0;
+        result.max_timestep = 0;
+        for (std::size_t i = 0; i < agents.size(); ++i) {
+            result.agent_paths[i] = agents[i].executed;
+            result.total_steps += static_cast<int>(agents[i].executed.size());
+            for (const auto& step : agents[i].executed) {
+                result.max_timestep = std::max(result.max_timestep, step.timestep);
+            }
+        }
+
+        const auto clock_end = std::chrono::steady_clock::now();
+        result.elapsed_ms =
+            std::chrono::duration<double, std::milli>(clock_end - clock_start).count();
+    };
+
     // Algorithm 2: receding horizon execution loop.
     while (!allAgentsAtGoal(agents) && timestep < config_.max_timesteps) {
         for (auto& agent : agents) {
@@ -327,10 +349,39 @@ SimulationResult MultiAgentPlanner::run(
 
             if (agent.planned.nodes.size() < 2) {
                 agent.at_goal = agent.state.mean.distance(agent.spec.goal) <= config_.expand_distance;
+                if (!agent.at_goal) {
+                    const auto agent_predictions =
+                        collectAgentPredictions(agents, agent.spec.id, agent.spec.priority);
+                    agent.planned = planner_.plan(
+                        agent.state,
+                        agent.spec.goal,
+                        environment.static_obstacles,
+                        agent_predictions,
+                        dynamic_predictions,
+                        0);
+                    if (agent.planned.empty()) {
+                        std::cerr << "Agent " << agent.spec.name
+                                  << " exhausted its trajectory and no feasible replan was found.\n";
+                        finishResult(false);
+                        notifyObserver(
+                            observer,
+                            buildFrame(
+                                environment,
+                                scenario_name,
+                                timestep,
+                                agents,
+                                dynamic_predictions,
+                                false,
+                                true));
+                        return result;
+                    }
+                    ++result.replan_count;
+                }
                 continue;
             }
 
-            const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
+            const auto agent_predictions =
+                collectAgentPredictions(agents, agent.spec.id, agent.spec.priority);
             Trajectory replanned = planner_.plan(
                 agent.state,
                 agent.spec.goal,
@@ -341,6 +392,39 @@ SimulationResult MultiAgentPlanner::run(
 
             const bool lazy_safe =
                 lazyCheck(agent, agents, environment.static_obstacles, dynamic_predictions);
+
+            if (!lazy_safe && replanned.empty()) {
+                const int default_max_iterations = config_.max_iterations;
+                const int default_goal_sample_rate = config_.goal_sample_rate;
+                config_.max_iterations = default_max_iterations * 4;
+                config_.goal_sample_rate = std::min(50, default_goal_sample_rate + 20);
+                replanned = planner_.plan(
+                    agent.state,
+                    agent.spec.goal,
+                    environment.static_obstacles,
+                    agent_predictions,
+                    dynamic_predictions,
+                    0);
+                config_.max_iterations = default_max_iterations;
+                config_.goal_sample_rate = default_goal_sample_rate;
+            }
+
+            if (!lazy_safe && replanned.empty()) {
+                std::cerr << "Unsafe path detected for agent " << agent.spec.name
+                          << " and no feasible replan was found.\n";
+                finishResult(false);
+                notifyObserver(
+                    observer,
+                    buildFrame(
+                        environment,
+                        scenario_name,
+                        timestep,
+                        agents,
+                        dynamic_predictions,
+                        false,
+                        true));
+                return result;
+            }
 
             const bool adopt_replan =
                 !lazy_safe ||
@@ -405,18 +489,7 @@ SimulationResult MultiAgentPlanner::run(
         }
     }
 
-    result.success = allAgentsAtGoal(agents);
-    result.agent_paths.resize(agents.size());
-    for (std::size_t i = 0; i < agents.size(); ++i) {
-        result.agent_paths[i] = agents[i].executed;
-        result.total_steps += static_cast<int>(agents[i].executed.size());
-        for (const auto& step : agents[i].executed) {
-            result.max_timestep = std::max(result.max_timestep, step.timestep);
-        }
-    }
-
-    const auto clock_end = std::chrono::steady_clock::now();
-    result.elapsed_ms = std::chrono::duration<double, std::milli>(clock_end - clock_start).count();
+    finishResult(true);
 
     notifyObserver(
         observer,

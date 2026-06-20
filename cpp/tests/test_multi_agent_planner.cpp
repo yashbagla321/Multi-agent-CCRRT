@@ -51,7 +51,7 @@ TEST(MultiAgentPlanner, LegacyModeRunsWithoutCrash) {
     config.bounds_max = 15.0;
     MultiAgentPlanner planner(config);
 
-    const auto env = singleAgentEnvironment({4, 0}, {0, 13});
+    auto env = singleAgentEnvironment({4, 0}, {0, 13});
     env.bounds_min = -2.0;
     env.bounds_max = 15.0;
     const auto result = planner.run(env, "legacy_smoke");

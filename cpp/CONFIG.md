@@ -108,7 +108,7 @@ All built-in scenarios are defined here:
   "dynamic_obstacles": [
     {
       "id": 0,
-      "initial_variance": 0.1,
+      "initial_variance": 0.2,
       "path": {
         "type": "vertical",
         "x": 10.0,

@@ -8,9 +8,51 @@
 using ccrrt::CCRRTPlanner;
 using ccrrt::GaussianState;
 using ccrrt::MonteCarloCollisionChecker;
+using ccrrt::Vec2;
 using ccrrt::test_helpers::fastTestPlannerConfig;
 using ccrrt::test_helpers::openEnvironment;
 using ccrrt::test_helpers::singleAgentEnvironment;
+
+namespace {
+
+class RejectGoalEdgeChecker final : public ccrrt::ICollisionChecker {
+public:
+    explicit RejectGoalEdgeChecker(Vec2 goal) : goal_(goal) {}
+
+    bool isNodeSafe(
+        const GaussianState&,
+        const std::vector<ccrrt::StaticObstacle>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        int) const override {
+        return true;
+    }
+
+    bool isEdgeSafe(
+        const Vec2&,
+        const Vec2& edge_end,
+        double,
+        const std::vector<ccrrt::StaticObstacle>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        int) const override {
+        return edge_end.distance(goal_) > 1e-9;
+    }
+
+    double estimateCollisionProbability(
+        const GaussianState&,
+        const std::vector<ccrrt::StaticObstacle>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        int) const override {
+        return 0.0;
+    }
+
+private:
+    Vec2 goal_;
+};
+
+}  // namespace
 
 TEST(CCRRTPlanner, PlansPathInOpenEnvironment) {
     auto config = fastTestPlannerConfig();
@@ -45,6 +87,25 @@ TEST(CCRRTPlanner, FailsWhenGoalFullyBlocked) {
     const auto env = ccrrt::test_helpers::blockedGoalEnvironment();
     const auto trajectory =
         planner.plan(start, env.agents[0].goal, env.static_obstacles, {}, {}, 0);
+
+    EXPECT_TRUE(trajectory.empty());
+}
+
+TEST(CCRRTPlanner, RejectsUnsafeFinalGoalEdge) {
+    auto config = fastTestPlannerConfig();
+    config.expand_distance = 0.5;
+    config.goal_sample_rate = 100;
+    config.max_iterations = 20;
+    std::mt19937 rng(config.rng_seed);
+    const Vec2 goal{1.0, 0.0};
+    RejectGoalEdgeChecker checker(goal);
+    CCRRTPlanner planner(config, checker, rng);
+
+    GaussianState start;
+    start.mean = {0.0, 0.0};
+    start.variance = config.initial_variance;
+
+    const auto trajectory = planner.plan(start, goal, {}, {}, {}, 0);
 
     EXPECT_TRUE(trajectory.empty());
 }

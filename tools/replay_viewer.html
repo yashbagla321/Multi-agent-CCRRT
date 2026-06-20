@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CCRRT Replay Viewer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #687381;
+      --line: #d9dee6;
+      --accent: #1d6f8f;
+      --danger: #c63b3b;
+      --shadow: 0 1px 3px rgba(19, 31, 43, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    aside {
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      padding: 16px;
+      overflow: auto;
+    }
+
+    main {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-width: 0;
+    }
+
+    .toolbar,
+    .statusbar {
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      min-width: 0;
+    }
+
+    .statusbar {
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+      color: var(--muted);
+      justify-content: space-between;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      font-weight: 650;
+    }
+
+    h2 {
+      margin: 18px 0 8px;
+      font-size: 13px;
+      font-weight: 650;
+      color: #2b3744;
+      text-transform: uppercase;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    input[type="file"],
+    input[type="number"],
+    input[type="range"],
+    select {
+      width: 100%;
+    }
+
+    input[type="file"],
+    input[type="number"],
+    select {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      padding: 7px;
+      color: var(--ink);
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      min-height: 34px;
+      padding: 0 12px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink);
+      margin: 8px 0;
+    }
+
+    .check input {
+      margin: 0;
+    }
+
+    .metric {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 7px 0;
+      border-bottom: 1px solid #edf0f4;
+    }
+
+    .metric span:first-child {
+      color: var(--muted);
+    }
+
+    .legend {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+      border: 2px solid transparent;
+    }
+
+    .canvas-wrap {
+      min-height: 0;
+      padding: 14px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      display: block;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .timeline {
+      flex: 1 1 auto;
+      min-width: 120px;
+    }
+
+    .time-readout {
+      font-variant-numeric: tabular-nums;
+      min-width: 86px;
+      color: var(--muted);
+    }
+
+    .hint {
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+
+    .error {
+      color: var(--danger);
+      margin-top: 8px;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 820px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .toolbar,
+      .statusbar {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <h1>CCRRT Replay Viewer</h1>
+
+      <h2>Files</h2>
+      <label for="trajectoryFile">trajectories.csv</label>
+      <input id="trajectoryFile" type="file" accept=".csv,text/csv">
+
+      <label for="summaryFile">summary.json</label>
+      <input id="summaryFile" type="file" accept=".json,application/json">
+
+      <label for="scenariosFile">scenarios.json</label>
+      <input id="scenariosFile" type="file" accept=".json,application/json">
+      <div class="hint">Select files from an output folder such as <code>output/figure5</code>. Scenario geometry appears when a matching scenarios file is selected.</div>
+      <div id="fileError" class="error"></div>
+
+      <h2>View</h2>
+      <label class="check"><input id="showVariance" type="checkbox" checked> Uncertainty discs</label>
+      <label class="check"><input id="showReplans" type="checkbox" checked> Replan markers</label>
+      <label class="check"><input id="showScenario" type="checkbox" checked> Scenario geometry</label>
+
+      <div class="row">
+        <div>
+          <label for="trailMode">Trail</label>
+          <select id="trailMode">
+            <option value="full">Full path</option>
+            <option value="past">Past only</option>
+            <option value="window">Recent window</option>
+          </select>
+        </div>
+        <div>
+          <label for="trailWindow">Window</label>
+          <input id="trailWindow" type="number" min="1" max="200" value="24">
+        </div>
+      </div>
+
+      <h2>Summary</h2>
+      <div id="summaryMetrics">
+        <div class="metric"><span>Scenario</span><strong>-</strong></div>
+        <div class="metric"><span>Status</span><strong>-</strong></div>
+        <div class="metric"><span>Steps</span><strong>-</strong></div>
+        <div class="metric"><span>Replans</span><strong>-</strong></div>
+      </div>
+
+      <h2>Agents</h2>
+      <div id="legend" class="legend"></div>
+    </aside>
+
+    <main>
+      <div class="toolbar">
+        <button id="playPause" class="primary" disabled>Play</button>
+        <button id="stepBack" disabled>-1</button>
+        <button id="stepForward" disabled>+1</button>
+        <input id="timeline" class="timeline" type="range" min="0" max="0" value="0" disabled>
+        <span id="timeReadout" class="time-readout">t = 0 / 0</span>
+        <label for="speed" style="margin:0;color:var(--muted);">Speed</label>
+        <select id="speed" style="width:88px;">
+          <option value="250">0.5x</option>
+          <option value="125" selected>1x</option>
+          <option value="65">2x</option>
+          <option value="30">4x</option>
+        </select>
+        <button id="fitView" disabled>Fit</button>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="canvas"></canvas>
+      </div>
+
+      <div class="statusbar">
+        <span id="status">Load trajectories.csv to begin.</span>
+        <span id="cursor">x -, y -</span>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const palette = ["#d94b4b", "#2f7dd1", "#2f9d68", "#c77d14", "#7a52cc", "#0b8c9c", "#bd4a8c", "#53616f"];
+    const state = {
+      trajectories: new Map(),
+      summary: null,
+      scenario: null,
+      currentTime: 0,
+      maxTime: 0,
+      playing: false,
+      timer: null,
+      bounds: null
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const canvas = $("canvas");
+    const ctx = canvas.getContext("2d");
+
+    $("trajectoryFile").addEventListener("change", loadTrajectoryFile);
+    $("summaryFile").addEventListener("change", loadSummaryFile);
+    $("scenariosFile").addEventListener("change", loadScenariosFile);
+    $("playPause").addEventListener("click", togglePlayback);
+    $("stepBack").addEventListener("click", () => setTime(state.currentTime - 1));
+    $("stepForward").addEventListener("click", () => setTime(state.currentTime + 1));
+    $("timeline").addEventListener("input", (event) => setTime(Number(event.target.value)));
+    $("fitView").addEventListener("click", () => {
+      state.bounds = computeBounds();
+      draw();
+    });
+    ["showVariance", "showReplans", "showScenario", "trailMode", "trailWindow"].forEach((id) => {
+      $(id).addEventListener("input", draw);
+    });
+    canvas.addEventListener("mousemove", updateCursor);
+    window.addEventListener("resize", draw);
+
+    function readFile(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) {
+          reject(new Error("No file selected."));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error || new Error("Could not read file."));
+        reader.readAsText(file);
+      });
+    }
+
+    async function loadTrajectoryFile(event) {
+      clearError();
+      try {
+        const text = await readFile(event.target.files[0]);
+        state.trajectories = parseCsv(text);
+        state.maxTime = maxTimestep(state.trajectories);
+        state.currentTime = 0;
+        state.bounds = computeBounds();
+        enableControls(true);
+        updateTimeline();
+        updateLegend();
+        updateSummary();
+        draw();
+        $("status").textContent = `Loaded ${countRows(state.trajectories)} trajectory rows.`;
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+
+    async function loadSummaryFile(event) {
+      clearError();
+      try {
+        state.summary = JSON.parse(await readFile(event.target.files[0]));
+        updateSummary();
+        draw();
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+
+    async function loadScenariosFile(event) {
+      clearError();
+      try {
+        const scenarios = JSON.parse(await readFile(event.target.files[0]));
+        state.scenario = findScenario(scenarios, state.summary && state.summary.scenario);
+        state.bounds = computeBounds();
+        updateSummary();
+        draw();
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+
+    function parseCsv(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length < 2) {
+        throw new Error("trajectories.csv has no data rows.");
+      }
+      const headers = lines[0].split(",").map((header) => header.trim());
+      const required = ["agent_id", "timestep", "x", "y", "variance", "replanned"];
+      for (const key of required) {
+        if (!headers.includes(key)) {
+          throw new Error(`Missing CSV column: ${key}`);
+        }
+      }
+
+      const index = Object.fromEntries(headers.map((header, i) => [header, i]));
+      const trajectories = new Map();
+      for (const line of lines.slice(1)) {
+        if (!line.trim()) {
+          continue;
+        }
+        const cells = line.split(",");
+        const row = {
+          agentId: Number(cells[index.agent_id]),
+          timestep: Number(cells[index.timestep]),
+          x: Number(cells[index.x]),
+          y: Number(cells[index.y]),
+          variance: Number(cells[index.variance]),
+          replanned: cells[index.replanned] === "1" || cells[index.replanned] === "true"
+        };
+        if (![row.agentId, row.timestep, row.x, row.y, row.variance].every(Number.isFinite)) {
+          throw new Error(`Invalid numeric row: ${line}`);
+        }
+        if (!trajectories.has(row.agentId)) {
+          trajectories.set(row.agentId, []);
+        }
+        trajectories.get(row.agentId).push(row);
+      }
+
+      for (const rows of trajectories.values()) {
+        rows.sort((a, b) => a.timestep - b.timestep);
+      }
+      return trajectories;
+    }
+
+    function findScenario(document, scenarioName) {
+      const root = document.scenarios && typeof document.scenarios === "object" ? document.scenarios : document;
+      if (!root || typeof root !== "object") {
+        return null;
+      }
+      if (scenarioName && root[scenarioName]) {
+        return root[scenarioName];
+      }
+      const first = Object.keys(root).find((key) => !key.startsWith("_") && root[key] && typeof root[key] === "object");
+      return first ? root[first] : null;
+    }
+
+    function maxTimestep(trajectories) {
+      let max = 0;
+      for (const rows of trajectories.values()) {
+        for (const row of rows) {
+          max = Math.max(max, row.timestep);
+        }
+      }
+      return max;
+    }
+
+    function countRows(trajectories) {
+      let count = 0;
+      for (const rows of trajectories.values()) {
+        count += rows.length;
+      }
+      return count;
+    }
+
+    function computeBounds() {
+      const points = [];
+      for (const rows of state.trajectories.values()) {
+        for (const row of rows) {
+          const radius = Math.sqrt(Math.max(row.variance, 0));
+          points.push({ x: row.x - radius, y: row.y - radius });
+          points.push({ x: row.x + radius, y: row.y + radius });
+        }
+      }
+
+      const env = scenarioEnvironment();
+      if (env) {
+        if (env.bounds) {
+          points.push({ x: Number(env.bounds.min), y: Number(env.bounds.min) });
+          points.push({ x: Number(env.bounds.max), y: Number(env.bounds.max) });
+        }
+        for (const obstacle of env.static_obstacles || []) {
+          const center = toPoint(obstacle.center);
+          if (center) {
+            const radius = Number(obstacle.radius || 0);
+            points.push({ x: center.x - radius, y: center.y - radius });
+            points.push({ x: center.x + radius, y: center.y + radius });
+          }
+        }
+        for (const agent of env.agents || []) {
+          [toPoint(agent.start), toPoint(agent.goal)].filter(Boolean).forEach((point) => points.push(point));
+        }
+        for (const obstacle of env.dynamic_obstacles || []) {
+          dynamicWaypoints(obstacle).forEach((point) => points.push(point));
+        }
+      }
+
+      if (points.length === 0) {
+        return { minX: -1, maxX: 1, minY: -1, maxY: 1 };
+      }
+      let minX = Math.min(...points.map((point) => point.x));
+      let maxX = Math.max(...points.map((point) => point.x));
+      let minY = Math.min(...points.map((point) => point.y));
+      let maxY = Math.max(...points.map((point) => point.y));
+      const span = Math.max(maxX - minX, maxY - minY, 1);
+      const pad = span * 0.08;
+      return { minX: minX - pad, maxX: maxX + pad, minY: minY - pad, maxY: maxY + pad };
+    }
+
+    function scenarioEnvironment() {
+      if (!state.scenario) {
+        return null;
+      }
+      return state.scenario.environment || state.scenario;
+    }
+
+    function toPoint(value) {
+      if (Array.isArray(value) && value.length >= 2) {
+        return { x: Number(value[0]), y: Number(value[1]) };
+      }
+      if (value && typeof value === "object" && Number.isFinite(Number(value.x)) && Number.isFinite(Number(value.y))) {
+        return { x: Number(value.x), y: Number(value.y) };
+      }
+      return null;
+    }
+
+    function dynamicWaypoints(obstacle) {
+      if (Array.isArray(obstacle.waypoints)) {
+        return obstacle.waypoints.map(toPoint).filter(Boolean);
+      }
+      const path = obstacle.path || {};
+      const step = Number(path.step || 1);
+      if (path.type === "vertical") {
+        return linePoints({ x: Number(path.x), y: Number(path.y_start) }, { x: Number(path.x), y: Number(path.y_end) }, step);
+      }
+      if (path.type === "horizontal") {
+        return linePoints({ x: Number(path.x_start), y: Number(path.y) }, { x: Number(path.x_end), y: Number(path.y) }, step);
+      }
+      if (path.type === "line") {
+        return linePoints(toPoint(path.from), toPoint(path.to), step);
+      }
+      return [];
+    }
+
+    function linePoints(from, to, step) {
+      if (!from || !to || !Number.isFinite(step) || step <= 0) {
+        return [];
+      }
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const length = Math.hypot(dx, dy);
+      const count = Math.max(1, Math.ceil(length / step));
+      return Array.from({ length: count + 1 }, (_, i) => ({
+        x: from.x + dx * (i / count),
+        y: from.y + dy * (i / count)
+      }));
+    }
+
+    function draw() {
+      resizeCanvas();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const bounds = state.bounds || computeBounds();
+      const view = makeView(bounds);
+
+      drawGrid(view);
+      if ($("showScenario").checked) {
+        drawScenario(view);
+      }
+      drawTrajectories(view);
+      updateTimeline();
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      const width = Math.max(320, Math.floor(rect.width * ratio));
+      const height = Math.max(320, Math.floor(rect.height * ratio));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+    }
+
+    function makeView(bounds) {
+      const width = canvas.width;
+      const height = canvas.height;
+      const spanX = bounds.maxX - bounds.minX;
+      const spanY = bounds.maxY - bounds.minY;
+      const scale = Math.min(width / spanX, height / spanY) * 0.92;
+      const cx = (bounds.minX + bounds.maxX) / 2;
+      const cy = (bounds.minY + bounds.maxY) / 2;
+      return {
+        scale,
+        worldToScreen(point) {
+          return {
+            x: width / 2 + (point.x - cx) * scale,
+            y: height / 2 - (point.y - cy) * scale
+          };
+        },
+        screenToWorld(point) {
+          return {
+            x: cx + (point.x - width / 2) / scale,
+            y: cy - (point.y - height / 2) / scale
+          };
+        }
+      };
+    }
+
+    function drawGrid(view) {
+      ctx.save();
+      ctx.strokeStyle = "#edf0f4";
+      ctx.lineWidth = 1;
+      const bounds = state.bounds || computeBounds();
+      const startX = Math.floor(bounds.minX);
+      const endX = Math.ceil(bounds.maxX);
+      const startY = Math.floor(bounds.minY);
+      const endY = Math.ceil(bounds.maxY);
+      for (let x = startX; x <= endX; x += 1) {
+        const a = view.worldToScreen({ x, y: bounds.minY });
+        const b = view.worldToScreen({ x, y: bounds.maxY });
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+      for (let y = startY; y <= endY; y += 1) {
+        const a = view.worldToScreen({ x: bounds.minX, y });
+        const b = view.worldToScreen({ x: bounds.maxX, y });
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawScenario(view) {
+      const env = scenarioEnvironment();
+      if (!env) {
+        return;
+      }
+      ctx.save();
+      for (const obstacle of env.static_obstacles || []) {
+        const center = toPoint(obstacle.center);
+        if (!center) {
+          continue;
+        }
+        const screen = view.worldToScreen(center);
+        ctx.fillStyle = "#1f2933";
+        ctx.beginPath();
+        ctx.arc(screen.x, screen.y, Number(obstacle.radius || 0) * view.scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      for (const obstacle of env.dynamic_obstacles || []) {
+        const points = dynamicWaypoints(obstacle);
+        drawPolyline(view, points, "#b64ac8", 2, [6, 6]);
+      }
+      for (const [index, agent] of (env.agents || []).entries()) {
+        const color = palette[index % palette.length];
+        drawPoint(view, toPoint(agent.start), color, 7, true);
+        drawRing(view, toPoint(agent.goal), color, 8);
+      }
+      ctx.restore();
+    }
+
+    function drawTrajectories(view) {
+      for (const [agentId, rows] of state.trajectories.entries()) {
+        const color = palette[agentId % palette.length];
+        const visible = visibleRows(rows);
+        drawPolyline(view, visible, color, 3);
+
+        if ($("showReplans").checked) {
+          for (const row of rows.filter((item) => item.replanned && item.timestep <= state.currentTime)) {
+            drawRing(view, row, "#111827", 5);
+          }
+        }
+
+        const current = rowAtTime(rows, state.currentTime);
+        if (current) {
+          if ($("showVariance").checked) {
+            const screen = view.worldToScreen(current);
+            ctx.save();
+            ctx.fillStyle = hexToRgba(color, 0.13);
+            ctx.strokeStyle = hexToRgba(color, 0.4);
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(screen.x, screen.y, Math.sqrt(Math.max(current.variance, 0)) * view.scale, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+          drawPoint(view, current, color, 7, false);
+        }
+      }
+    }
+
+    function visibleRows(rows) {
+      const mode = $("trailMode").value;
+      if (mode === "full") {
+        return rows;
+      }
+      if (mode === "past") {
+        return rows.filter((row) => row.timestep <= state.currentTime);
+      }
+      const windowSize = Math.max(1, Number($("trailWindow").value || 24));
+      return rows.filter((row) => row.timestep <= state.currentTime && row.timestep >= state.currentTime - windowSize);
+    }
+
+    function rowAtTime(rows, time) {
+      let candidate = null;
+      for (const row of rows) {
+        if (row.timestep <= time) {
+          candidate = row;
+        } else {
+          break;
+        }
+      }
+      return candidate;
+    }
+
+    function drawPolyline(view, points, color, width, dash) {
+      const valid = points.filter(Boolean);
+      if (valid.length < 2) {
+        return;
+      }
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.setLineDash(dash || []);
+      ctx.beginPath();
+      valid.forEach((point, index) => {
+        const screen = view.worldToScreen(point);
+        if (index === 0) {
+          ctx.moveTo(screen.x, screen.y);
+        } else {
+          ctx.lineTo(screen.x, screen.y);
+        }
+      });
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawPoint(view, point, color, radius, outline) {
+      if (!point) {
+        return;
+      }
+      const screen = view.worldToScreen(point);
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = outline ? 3 : 1.5;
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawRing(view, point, color, radius) {
+      if (!point) {
+        return;
+      }
+      const screen = view.worldToScreen(point);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function setTime(value) {
+      state.currentTime = Math.max(0, Math.min(state.maxTime, Math.round(value)));
+      updateTimeline();
+      draw();
+    }
+
+    function togglePlayback() {
+      state.playing = !state.playing;
+      $("playPause").textContent = state.playing ? "Pause" : "Play";
+      if (state.playing) {
+        state.timer = setInterval(() => {
+          if (state.currentTime >= state.maxTime) {
+            setTime(0);
+          } else {
+            setTime(state.currentTime + 1);
+          }
+        }, Number($("speed").value));
+      } else {
+        clearInterval(state.timer);
+      }
+    }
+
+    function updateTimeline() {
+      $("timeline").max = String(state.maxTime);
+      $("timeline").value = String(state.currentTime);
+      $("timeReadout").textContent = `t = ${state.currentTime} / ${state.maxTime}`;
+    }
+
+    function enableControls(enabled) {
+      ["playPause", "stepBack", "stepForward", "timeline", "fitView"].forEach((id) => {
+        $(id).disabled = !enabled;
+      });
+    }
+
+    function updateLegend() {
+      const legend = $("legend");
+      legend.innerHTML = "";
+      for (const agentId of state.trajectories.keys()) {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        item.innerHTML = `<span class="swatch" style="background:${palette[agentId % palette.length]}"></span><span>Agent ${agentId}</span>`;
+        legend.appendChild(item);
+      }
+    }
+
+    function updateSummary() {
+      const summary = state.summary || {};
+      const rows = [
+        ["Scenario", summary.scenario || "-"],
+        ["Status", typeof summary.success === "boolean" ? (summary.success ? "success" : "failed") : "-"],
+        ["Steps", summary.total_steps ?? (countRows(state.trajectories) || "-")],
+        ["Replans", summary.replan_count ?? "-"]
+      ];
+      $("summaryMetrics").innerHTML = rows
+        .map(([label, value]) => `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`)
+        .join("");
+    }
+
+    function updateCursor(event) {
+      const bounds = state.bounds || computeBounds();
+      const view = makeView(bounds);
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      const point = view.screenToWorld({
+        x: (event.clientX - rect.left) * ratio,
+        y: (event.clientY - rect.top) * ratio
+      });
+      $("cursor").textContent = `x ${point.x.toFixed(2)}, y ${point.y.toFixed(2)}`;
+    }
+
+    function hexToRgba(hex, alpha) {
+      const value = hex.replace("#", "");
+      const r = parseInt(value.slice(0, 2), 16);
+      const g = parseInt(value.slice(2, 4), 16);
+      const b = parseInt(value.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function clearError() {
+      $("fileError").textContent = "";
+    }
+
+    function showError(message) {
+      $("fileError").textContent = message;
+      $("status").textContent = "Could not load file.";
+    }
+
+    draw();
+  </script>
+</body>
+</html>

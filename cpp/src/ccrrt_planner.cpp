@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
 
 namespace ccrrt {
 
@@ -156,7 +157,9 @@ Trajectory CCRRTPlanner::plan(
     std::uniform_real_distribution<double> coord(config_.bounds_min, config_.bounds_max);
     std::uniform_int_distribution<int> percent(0, 100);
 
-    int goal_parent = -1;
+    Trajectory best_path;
+    int goal_candidate_count = 0;
+    constexpr int max_goal_candidates = 8;
 
     for (int iter = 0; iter < config_.max_iterations; ++iter) {
         // --- Sample: goal-biased or uniform over workspace ---
@@ -203,35 +206,48 @@ Trajectory CCRRTPlanner::plan(
         nodes.push_back(candidate);
 
         if (candidate.position.distance(goal) <= config_.expand_distance) {
-            goal_parent = static_cast<int>(nodes.size()) - 1;
-            break;
+            TrajectoryNode goal_node;
+            goal_node.position = goal;
+            if (config_.use_legacy_collision) {
+                goal_node.variance = candidate.variance * (1.0 + config_.variance_growth_alpha);
+            } else {
+                goal_node.variance = candidate.variance + config_.process_noise;
+            }
+
+            const int goal_horizon_index = horizon_index + 1;
+            if (!collision_checker_.isEdgeSafe(
+                    candidate.position,
+                    goal_node.position,
+                    goal_node.variance,
+                    static_obstacles,
+                    agent_predictions,
+                    dynamic_predictions,
+                    goal_horizon_index)) {
+                continue;
+            }
+
+            Trajectory path = extractPath(nodes, static_cast<int>(nodes.size()) - 1);
+            goal_node.time_step = static_cast<int>(path.nodes.size());
+            path.total_cost += nodeCost(
+                RRTNode{goal_node.position, goal_node.variance, -1, 0.0},
+                static_obstacles);
+            path.nodes.push_back(goal_node);
+
+            if (best_path.empty() ||
+                path.total_cost < best_path.total_cost ||
+                (path.total_cost == best_path.total_cost &&
+                 path.nodes.size() < best_path.nodes.size())) {
+                best_path = std::move(path);
+            }
+
+            ++goal_candidate_count;
+            if (goal_candidate_count >= max_goal_candidates) {
+                break;
+            }
         }
     }
 
-    if (goal_parent < 0) {
-        return {};
-    }
-
-    Trajectory path = extractPath(nodes, goal_parent);
-
-    TrajectoryNode goal_node;
-    goal_node.position = goal;
-    if (config_.use_legacy_collision) {
-        goal_node.variance = nodes[static_cast<std::size_t>(goal_parent)].variance *
-                             (1.0 + config_.variance_growth_alpha);
-    } else {
-        goal_node.variance =
-            nodes[static_cast<std::size_t>(goal_parent)].variance + config_.process_noise;
-    }
-    goal_node.time_step = static_cast<int>(path.nodes.size());
-    path.nodes.push_back(goal_node);
-    return shortcutSmooth(
-        path,
-        goal,
-        static_obstacles,
-        agent_predictions,
-        dynamic_predictions,
-        time_offset);
+    return best_path;
 }
 
 }  // namespace ccrrt

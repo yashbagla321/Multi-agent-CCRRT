@@ -55,8 +55,9 @@ struct PlannerConfig {
     /**
      * @brief Cap on variance used for other agents / dynamic obstacle confidence discs.
      *
-     * Prevents late-horizon prediction tubes from growing large enough to block the
-     * entire workspace during RRT planning (variance still grows uncapped on the ego tree).
+     * Intentional implementation guardrail: the covariance itself still grows
+     * linearly, but late-horizon confidence discs are capped so finite-budget RRT
+     * replans do not block the entire workspace.
      */
     double max_prediction_variance = 0.8;
 

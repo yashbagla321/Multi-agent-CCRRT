@@ -16,7 +16,7 @@ TEST(Geometry, PointSegmentDistance_Perpendicular) {
 }
 
 TEST(Geometry, PointSegmentDistance_DegenerateSegment) {
-    EXPECT_NEAR(pointSegmentDistance({3, 4}, {1, 1}, {1, 1}), 5.0, 1e-9);
+    EXPECT_NEAR(pointSegmentDistance({3, 4}, {1, 1}, {1, 1}), 3.605551275463989, 1e-9);
 }
 
 TEST(Geometry, SegmentsIntersect_Crossing) {
