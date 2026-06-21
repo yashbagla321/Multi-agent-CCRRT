@@ -6,9 +6,6 @@
     "_scenario": "Scenario matching Multiagent CCRRT.py main() geometry.",
     "scenario": "python_reference",
 
-    "_enable_visualization": "Master switch for SFML visualization.",
-    "enable_visualization": true,
-
     "_python_compat": "Enable legacy collision checker and Python-aligned planner settings.",
     "python_compat": true
   },

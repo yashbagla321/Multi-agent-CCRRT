@@ -19,7 +19,7 @@
  *        +-- CCRRTPlanner          (single-agent tree growth)
  *        +-- MonteCarloCollisionChecker  (chance constraints)
  *        +-- KalmanFilter          (measurement updates)
- *        +-- TrajectoryExporter / SFMLRenderer
+ *        +-- TrajectoryExporter
  * ```
  *
  * ## Typical usage
@@ -43,6 +43,5 @@
 #include "ccrrt/geometry.hpp"
 #include "ccrrt/kalman_filter.hpp"
 #include "ccrrt/multi_agent_planner.hpp"
-#include "ccrrt/sfml_renderer.hpp"
 #include "ccrrt/trajectory_exporter.hpp"
 #include "ccrrt/types.hpp"

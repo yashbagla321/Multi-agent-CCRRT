@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <ostream>
 #include <sstream>
 
 namespace ccrrt {
@@ -26,6 +27,51 @@ bool ensureDirectory(const std::string& path) {
         return false;
     }
     return true;
+}
+
+std::string escapeJsonString(const std::string& value) {
+    std::ostringstream out;
+    for (const char ch : value) {
+        switch (ch) {
+            case '\\':
+                out << "\\\\";
+                break;
+            case '"':
+                out << "\\\"";
+                break;
+            case '\n':
+                out << "\\n";
+                break;
+            case '\r':
+                out << "\\r";
+                break;
+            case '\t':
+                out << "\\t";
+                break;
+            default:
+                out << ch;
+                break;
+        }
+    }
+    return out.str();
+}
+
+void writePoint(std::ostream& out, const Vec2& point) {
+    out << '[' << point.x << ", " << point.y << ']';
+}
+
+void writeTrajectoryNode(
+    std::ostream& out,
+    const TrajectoryNode& node,
+    const double* collision_probability = nullptr) {
+    out << "{ \"time_step\": " << node.time_step
+        << ", \"x\": " << node.position.x
+        << ", \"y\": " << node.position.y
+        << ", \"variance\": " << node.variance;
+    if (collision_probability != nullptr) {
+        out << ", \"collision_probability\": " << *collision_probability;
+    }
+    out << " }";
 }
 
 }  // namespace
@@ -89,6 +135,201 @@ bool TrajectoryExporter::exportSummaryJson(const SimulationResult& result, const
         file << '\n';
     }
 
+    file << "  ]\n";
+    file << "}\n";
+    return true;
+}
+
+bool TrajectoryExporter::exportScenarioJson(
+    const std::string& scenario_name,
+    const std::string& description,
+    const Environment& environment,
+    const std::string& output_directory) const {
+    if (!ensureDirectory(output_directory)) {
+        return false;
+    }
+
+    std::ostringstream filename;
+    filename << output_directory << "/scenario.json";
+    std::ofstream file(filename.str());
+    if (!file.is_open()) {
+        std::cerr << "Failed to open " << filename.str() << " for writing\n";
+        return false;
+    }
+
+    file << std::fixed << std::setprecision(4);
+    file << "{\n";
+    file << "  \"name\": \"" << escapeJsonString(scenario_name) << "\",\n";
+    file << "  \"description\": \"" << escapeJsonString(description) << "\",\n";
+    file << "  \"bounds\": { \"min\": " << environment.bounds_min
+         << ", \"max\": " << environment.bounds_max << " },\n";
+
+    file << "  \"static_obstacles\": [\n";
+    for (std::size_t i = 0; i < environment.static_obstacles.size(); ++i) {
+        const auto& obstacle = environment.static_obstacles[i];
+        file << "    { \"center\": ";
+        writePoint(file, obstacle.center);
+        file << ", \"radius\": " << obstacle.radius << " }";
+        if (i + 1 < environment.static_obstacles.size()) {
+            file << ',';
+        }
+        file << '\n';
+    }
+    file << "  ],\n";
+
+    file << "  \"agents\": [\n";
+    for (std::size_t i = 0; i < environment.agents.size(); ++i) {
+        const auto& agent = environment.agents[i];
+        file << "    { \"id\": " << agent.id
+             << ", \"priority\": " << agent.priority
+             << ", \"name\": \"" << escapeJsonString(agent.name) << "\", \"start\": ";
+        writePoint(file, agent.start);
+        file << ", \"goal\": ";
+        writePoint(file, agent.goal);
+        file << " }";
+        if (i + 1 < environment.agents.size()) {
+            file << ',';
+        }
+        file << '\n';
+    }
+    file << "  ],\n";
+
+    file << "  \"dynamic_obstacles\": [\n";
+    for (std::size_t i = 0; i < environment.dynamic_obstacles.size(); ++i) {
+        const auto& obstacle = environment.dynamic_obstacles[i];
+        file << "    {\n";
+        file << "      \"id\": " << obstacle.id << ",\n";
+        file << "      \"initial_variance\": " << obstacle.initial_variance << ",\n";
+        file << "      \"waypoints\": [\n";
+        for (std::size_t j = 0; j < obstacle.waypoints.size(); ++j) {
+            file << "        ";
+            writePoint(file, obstacle.waypoints[j]);
+            if (j + 1 < obstacle.waypoints.size()) {
+                file << ',';
+            }
+            file << '\n';
+        }
+        file << "      ]";
+        if (!obstacle.variance_per_waypoint.empty()) {
+            file << ",\n";
+            file << "      \"variance_per_waypoint\": [";
+            for (std::size_t j = 0; j < obstacle.variance_per_waypoint.size(); ++j) {
+                if (j > 0) {
+                    file << ", ";
+                }
+                file << obstacle.variance_per_waypoint[j];
+            }
+            file << "]\n";
+        } else {
+            file << '\n';
+        }
+        file << "    }";
+        if (i + 1 < environment.dynamic_obstacles.size()) {
+            file << ',';
+        }
+        file << '\n';
+    }
+    file << "  ]\n";
+    file << "}\n";
+    return true;
+}
+
+bool TrajectoryExporter::exportReplayFramesJson(
+    const std::vector<SimulationFrame>& frames,
+    const std::string& output_directory) const {
+    if (!ensureDirectory(output_directory)) {
+        return false;
+    }
+
+    std::ostringstream filename;
+    filename << output_directory << "/replay_frames.json";
+    std::ofstream file(filename.str());
+    if (!file.is_open()) {
+        std::cerr << "Failed to open " << filename.str() << " for writing\n";
+        return false;
+    }
+
+    file << std::fixed << std::setprecision(6);
+    file << "{\n";
+    file << "  \"frames\": [\n";
+    for (std::size_t frame_index = 0; frame_index < frames.size(); ++frame_index) {
+        const auto& frame = frames[frame_index];
+        file << "    {\n";
+        file << "      \"scenario\": \"" << escapeJsonString(frame.scenario_name) << "\",\n";
+        file << "      \"timestep\": " << frame.timestep << ",\n";
+        file << "      \"initial_plan_ready\": "
+             << (frame.initial_plan_ready ? "true" : "false") << ",\n";
+        file << "      \"simulation_complete\": "
+             << (frame.simulation_complete ? "true" : "false") << ",\n";
+        file << "      \"max_collision_probability\": "
+             << frame.max_collision_probability << ",\n";
+
+        file << "      \"agents\": [\n";
+        for (std::size_t agent_index = 0; agent_index < frame.agents.size(); ++agent_index) {
+            const auto& agent = frame.agents[agent_index];
+            file << "        {\n";
+            file << "          \"id\": " << agent.spec.id << ",\n";
+            file << "          \"priority\": " << agent.spec.priority << ",\n";
+            file << "          \"name\": \"" << escapeJsonString(agent.spec.name) << "\",\n";
+            file << "          \"x\": " << agent.position.x << ",\n";
+            file << "          \"y\": " << agent.position.y << ",\n";
+            file << "          \"variance\": " << agent.variance << ",\n";
+            file << "          \"at_goal\": " << (agent.at_goal ? "true" : "false") << ",\n";
+            file << "          \"replanned_this_step\": "
+                 << (agent.replanned_this_step ? "true" : "false") << ",\n";
+            file << "          \"max_collision_probability\": "
+                 << agent.max_collision_probability << ",\n";
+            file << "          \"planned\": [\n";
+            for (std::size_t node_index = 0; node_index < agent.planned.nodes.size(); ++node_index) {
+                file << "            ";
+                const double* probability = nullptr;
+                if (node_index < agent.planned_collision_probabilities.size()) {
+                    probability = &agent.planned_collision_probabilities[node_index];
+                }
+                writeTrajectoryNode(file, agent.planned.nodes[node_index], probability);
+                if (node_index + 1 < agent.planned.nodes.size()) {
+                    file << ',';
+                }
+                file << '\n';
+            }
+            file << "          ]\n";
+            file << "        }";
+            if (agent_index + 1 < frame.agents.size()) {
+                file << ',';
+            }
+            file << '\n';
+        }
+        file << "      ],\n";
+
+        file << "      \"dynamic_predictions\": [\n";
+        for (std::size_t prediction_index = 0;
+             prediction_index < frame.dynamic_predictions.size();
+             ++prediction_index) {
+            const auto& prediction = frame.dynamic_predictions[prediction_index];
+            file << "        {\n";
+            file << "          \"nodes\": [\n";
+            for (std::size_t node_index = 0; node_index < prediction.nodes.size(); ++node_index) {
+                file << "            ";
+                writeTrajectoryNode(file, prediction.nodes[node_index]);
+                if (node_index + 1 < prediction.nodes.size()) {
+                    file << ',';
+                }
+                file << '\n';
+            }
+            file << "          ]\n";
+            file << "        }";
+            if (prediction_index + 1 < frame.dynamic_predictions.size()) {
+                file << ',';
+            }
+            file << '\n';
+        }
+        file << "      ]\n";
+        file << "    }";
+        if (frame_index + 1 < frames.size()) {
+            file << ',';
+        }
+        file << '\n';
+    }
     file << "  ]\n";
     file << "}\n";
     return true;

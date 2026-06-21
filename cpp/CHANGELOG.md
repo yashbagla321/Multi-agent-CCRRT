@@ -1,48 +1,34 @@
 # Changelog
 
-## Recent changes (2026)
+## Recent changes
 
 ### Runtime JSON configuration
 
-- Added `config/ccrrt.json` — planner parameters and run options (no rebuild).
-- Added `config/scenarios.json` — **all scenario geometry** (obstacles, agents, dynamic paths); replaces hardcoded C++ scenario factories.
-- Added `config/python_compat.json` — preset for `Multiagent CCRRT.py` compatibility.
-- Added `--config <file>` CLI flag; auto-discovers `config/ccrrt.json`.
-- Dynamic obstacle `path` generators: `vertical`, `horizontal`, `line`.
-- Scenario `category`: `paper` or `performance` (for benchmarks).
-- Inline `"scenarios"` in `ccrrt.json` overrides entries in `scenarios_file` by name.
-- Removed `ccrrt_scenarios` library; scenarios are config-driven only.
-- See **[CONFIG.md](CONFIG.md)** for the full schema; per-field docs are inline in `config/ccrrt.json`.
+- Added `config/ccrrt.json` for planner parameters and run options.
+- Added `config/scenarios.json` for scenario geometry.
+- Added `config/python_compat.json` for the Python prototype compatibility preset.
+- Added `--config <file>` and JSON-driven scenario selection.
+- Added dynamic obstacle path generators: `vertical`, `horizontal`, and `line`.
+- Added scenario categories for `--list-scenarios` and `--benchmark-all`.
 
-### Python reference test case
+### Replay visualization
 
-- Added built-in scenario `python_reference` matching `Multiagent CCRRT.py` `main()` geometry.
-- Added `--python-compat` flag and `pythonCompatPlannerConfig()`:
-  - `expand_distance = 1.0`, `max_iterations = 500`
-  - Multiplicative variance growth (`× 1.1` per tree edge)
-  - Deterministic legacy collision checker
-- Added `LegacyPythonCollisionChecker` (`legacy_collision_checker.cpp`).
-- Added `variance_per_waypoint` on `DynamicObstacleSpec` for explicit dynamic-obstacle uncertainty schedules.
+- Removed the native C++ window visualization dependency.
+- Added browser replay via `tools/replay_viewer.html`.
+- Added `scenario.json` export so each replay folder is self-contained.
+- Added `replay_frames.json` export for active receding-horizon plans, future covariance, and collision risk over time.
+- Replay folders now contain `trajectories.csv`, `summary.json`, `scenario.json`, and `replay_frames.json`.
 
-### Visualization fix
+### Planner and collision checking
 
-- Fixed SFML coordinate mapping in `sfml_renderer.cpp`:
-  - Workspace `[bounds_min, bounds_max]` now maps correctly into the 800×800 window.
-  - Previously ignored `bounds_min`, pushing most geometry off-screen.
-- Added workspace border and start/goal markers on simulation result view.
-
-### Collision checking improvements
-
-- Monte Carlo `isEdgeSafe` now rejects edges that intersect higher-priority agent or dynamic-obstacle broadcast segments (paper §4.1; matches Python segment-intersection checks).
-
-### Planner configuration
-
-- Added `max_timesteps` to `PlannerConfig` (was hardcoded at 500).
-- `MultiAgentPlanner` uses `std::unique_ptr<ICollisionChecker>` to switch between Monte Carlo and legacy checkers at runtime.
+- Added `python_reference` scenario matching the Python prototype geometry.
+- Added `--python-compat` and `pythonCompatPlannerConfig()`.
+- Added `LegacyPythonCollisionChecker`.
+- Added explicit `variance_per_waypoint` support for dynamic obstacle schedules.
+- Improved Monte Carlo edge checks against higher-priority agent and dynamic-obstacle broadcast segments.
+- Added `max_timesteps` to `PlannerConfig`.
+- `MultiAgentPlanner` can switch between Monte Carlo and legacy collision checkers at runtime.
 
 ### Documentation
 
-- **CONFIG.md** — runtime configuration reference.
-- Per-field parameter docs inline in `config/ccrrt.json` (`"_field": "description"` before each field).
-- **CHANGELOG.md** — this file.
-- Updated **README.md** with config and python_reference usage.
+- Updated `README.md`, `CONFIG.md`, and `ARCHITECTURE.md` for the browser replay workflow.

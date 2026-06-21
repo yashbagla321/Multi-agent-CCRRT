@@ -32,7 +32,7 @@ Environment makePerfClutteredScenario() {
         makeAgent(1, 1, "agent_b", {14.0, 1.0}, {1.0, 14.0}),
     };
     env.dynamic_obstacles = {
-        makeDynamicObstacle(0, verticalPath(10.5, 0.5, 14.5, 1.0)),
+        makeDynamicObstacle(0, verticalPath(10.5, 0.5, 14.5, 0.2)),
     };
     return env;
 }
@@ -53,7 +53,7 @@ Environment makePerfFourAgentsScenario() {
         makeAgent(3, 3, "agent_3", {7.5, 0.5}, {7.5, 14.5}),
     };
     env.dynamic_obstacles = {
-        makeDynamicObstacle(0, horizontalPath(8.0, 1.0, 14.0, 1.0)),
+        makeDynamicObstacle(0, horizontalPath(8.0, 1.0, 14.0, 0.2)),
     };
     return env;
 }
@@ -74,7 +74,7 @@ Environment makePerfNarrowPassageScenario() {
         makeAgent(1, 1, "south", {8.0, 1.0}, {8.0, 14.0}),
     };
     env.dynamic_obstacles = {
-        makeDynamicObstacle(0, verticalPath(8.0, 14.0, 1.0, 0.5)),
+        makeDynamicObstacle(0, verticalPath(8.0, 14.0, 1.0, 0.2)),
     };
     return env;
 }
@@ -106,9 +106,9 @@ Environment makePerfMultiDynamicScenario() {
         makeAgent(1, 1, "east", {14.0, 8.0}, {1.0, 8.0}),
     };
     env.dynamic_obstacles = {
-        makeDynamicObstacle(0, verticalPath(5.0, 1.0, 14.0, 1.0)),
-        makeDynamicObstacle(1, verticalPath(11.0, 14.0, 1.0, 1.0)),
-        makeDynamicObstacle(2, horizontalPath(8.0, 1.0, 14.0, 1.0)),
+        makeDynamicObstacle(0, verticalPath(5.0, 1.0, 14.0, 0.2)),
+        makeDynamicObstacle(1, verticalPath(11.0, 14.0, 1.0, 0.2)),
+        makeDynamicObstacle(2, horizontalPath(8.0, 1.0, 14.0, 0.2)),
     };
     return env;
 }
@@ -117,9 +117,9 @@ Environment makePerfStressScenario() {
     Environment env = makePerfClutteredScenario();
     env.agents.push_back(makeAgent(2, 2, "agent_c", {7.5, 0.5}, {7.5, 14.5}));
     env.dynamic_obstacles.push_back(
-        makeDynamicObstacle(1, horizontalPath(7.0, 0.5, 14.5, 0.8)));
+        makeDynamicObstacle(1, horizontalPath(7.0, 0.5, 14.5, 0.2)));
     env.dynamic_obstacles.push_back(
-        makeDynamicObstacle(2, verticalPath(3.0, 14.0, 2.0, 0.8)));
+        makeDynamicObstacle(2, verticalPath(3.0, 14.0, 2.0, 0.2)));
     return env;
 }
 

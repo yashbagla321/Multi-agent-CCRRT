@@ -27,6 +27,12 @@ struct AgentSnapshot {
 
     /** @brief Active receding-horizon plan from the current state. */
     Trajectory planned;
+
+    /** @brief Collision probability estimate for each node in @ref planned. */
+    std::vector<double> planned_collision_probabilities;
+
+    /** @brief Maximum collision probability across the active planned horizon. */
+    double max_collision_probability = 0.0;
 };
 
 /**
@@ -45,6 +51,9 @@ struct SimulationFrame {
     Environment environment;
     std::vector<AgentSnapshot> agents;
     std::vector<TrajectoryPrediction> dynamic_predictions;
+
+    /** @brief Maximum collision probability across all active agent plans. */
+    double max_collision_probability = 0.0;
 };
 
 /**

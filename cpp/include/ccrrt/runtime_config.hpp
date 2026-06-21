@@ -20,11 +20,6 @@ namespace ccrrt {
 struct RunSettings {
     std::string scenario = "figure5";
     std::string output_directory;
-    bool enable_visualization = true;
-    bool live_visualization = true;
-    int viz_step_delay_ms = 150;
-    bool preview_only = false;
-    bool preview_all = false;
     bool list_scenarios = false;
     bool benchmark_all = false;
     bool python_compat = false;

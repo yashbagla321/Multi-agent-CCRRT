@@ -99,21 +99,6 @@ void parseRunSettings(const json& root, RunSettings& run) {
     if (root.contains("output_directory")) {
         run.output_directory = root["output_directory"].get<std::string>();
     }
-    if (root.contains("enable_visualization")) {
-        run.enable_visualization = root["enable_visualization"].get<bool>();
-    }
-    if (root.contains("live_visualization")) {
-        run.live_visualization = root["live_visualization"].get<bool>();
-    }
-    if (root.contains("viz_step_delay_ms")) {
-        run.viz_step_delay_ms = root["viz_step_delay_ms"].get<int>();
-    }
-    if (root.contains("preview_only")) {
-        run.preview_only = root["preview_only"].get<bool>();
-    }
-    if (root.contains("preview_all")) {
-        run.preview_all = root["preview_all"].get<bool>();
-    }
     if (root.contains("list_scenarios")) {
         run.list_scenarios = root["list_scenarios"].get<bool>();
     }
@@ -400,21 +385,10 @@ void applyCommandLineOverrides(AppConfig& config, int argc, char* argv[]) {
         const std::string arg = argv[i];
         if (arg == "--scenario" && i + 1 < argc) {
             config.run.scenario = argv[++i];
-        } else if (arg == "--preview") {
-            config.run.preview_only = true;
-        } else if (arg == "--preview-all") {
-            config.run.preview_all = true;
         } else if (arg == "--list-scenarios") {
             config.run.list_scenarios = true;
         } else if (arg == "--benchmark-all") {
             config.run.benchmark_all = true;
-            config.run.enable_visualization = false;
-        } else if (arg == "--no-viz") {
-            config.run.enable_visualization = false;
-        } else if (arg == "--no-live-viz") {
-            config.run.live_visualization = false;
-        } else if (arg == "--viz-delay-ms" && i + 1 < argc) {
-            config.run.viz_step_delay_ms = std::stoi(argv[++i]);
         } else if (arg == "--output" && i + 1 < argc) {
             config.run.output_directory = argv[++i];
         } else if (arg == "--seed" && i + 1 < argc) {

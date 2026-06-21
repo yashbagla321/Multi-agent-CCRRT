@@ -149,25 +149,75 @@
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 12px;
-      padding: 7px 0;
-      border-bottom: 1px solid #edf0f4;
+      padding: 3px 0;
     }
 
     .metric span:first-child {
       color: var(--muted);
     }
 
-    .legend {
+    .agent-list {
       display: grid;
       gap: 8px;
-      margin-top: 8px;
     }
 
-    .legend-item {
-      display: flex;
+    .agent-row {
+      display: grid;
+      grid-template-columns: auto minmax(82px, 1fr) auto auto auto;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       min-width: 0;
+      padding: 6px 0;
+      border-top: 1px solid rgba(217, 222, 230, 0.8);
+    }
+
+    .agent-row:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .agent-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 650;
+    }
+
+    .agent-stat {
+      display: grid;
+      gap: 1px;
+      text-align: right;
+      font-size: 12px;
+    }
+
+    .agent-stat span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .agent-badge {
+      justify-self: end;
+      min-width: 54px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      padding: 2px 7px;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .agent-badge.replan {
+      border-color: #f59f00;
+      color: #9a5d00;
+      background: rgba(245, 159, 0, 0.1);
+    }
+
+    .agent-badge.goal {
+      border-color: #2f9d68;
+      color: #1f7049;
+      background: rgba(47, 157, 104, 0.1);
     }
 
     .swatch {
@@ -178,9 +228,16 @@
       border: 2px solid transparent;
     }
 
+    .replay-workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 14px;
+      padding: 14px;
+    }
+
     .canvas-wrap {
       min-height: 0;
-      padding: 14px;
     }
 
     canvas {
@@ -191,6 +248,29 @@
       background: #ffffff;
       border: 1px solid var(--line);
       box-shadow: var(--shadow);
+    }
+
+    .info-panel {
+      min-width: 0;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .info-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .info-title {
+      margin: 0 0 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #2b3744;
+      text-transform: uppercase;
     }
 
     .timeline {
@@ -230,6 +310,10 @@
       .statusbar {
         flex-wrap: wrap;
       }
+
+      .replay-workspace {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -239,19 +323,34 @@
       <h1>CCRRT Replay Viewer</h1>
 
       <h2>Files</h2>
+      <label for="replayFolder">Replay folder</label>
+      <input id="replayFolder" type="file" webkitdirectory directory multiple>
+      <div class="hint">Select an output folder such as <code>output/figure5</code>. The viewer will load <code>trajectories.csv</code>, <code>summary.json</code>, <code>scenario.json</code>, and <code>replay_frames.json</code> automatically.</div>
+
+      <h2>Manual files</h2>
       <label for="trajectoryFile">trajectories.csv</label>
       <input id="trajectoryFile" type="file" accept=".csv,text/csv">
 
       <label for="summaryFile">summary.json</label>
       <input id="summaryFile" type="file" accept=".json,application/json">
 
-      <label for="scenariosFile">scenarios.json</label>
+      <label for="scenariosFile">scenario.json or scenarios.json</label>
       <input id="scenariosFile" type="file" accept=".json,application/json">
-      <div class="hint">Select files from an output folder such as <code>output/figure5</code>. Scenario geometry appears when a matching scenarios file is selected.</div>
+
+      <label for="replayFramesFile">replay_frames.json</label>
+      <input id="replayFramesFile" type="file" accept=".json,application/json">
+
+      <label for="scenarioSelect">Scenario</label>
+      <select id="scenarioSelect" disabled>
+        <option value="">Load scenarios.json</option>
+      </select>
+      <div class="hint">Use these only for older output folders or custom files. Older runs can use <code>cpp/config/scenarios.json</code>.</div>
       <div id="fileError" class="error"></div>
 
       <h2>View</h2>
       <label class="check"><input id="showVariance" type="checkbox" checked> Uncertainty discs</label>
+      <label class="check"><input id="showFuturePlans" type="checkbox" checked> Future plans</label>
+      <label class="check"><input id="showFutureVariance" type="checkbox" checked> Future covariance</label>
       <label class="check"><input id="showReplans" type="checkbox" checked> Replan markers</label>
       <label class="check"><input id="showScenario" type="checkbox" checked> Scenario geometry</label>
 
@@ -270,16 +369,6 @@
         </div>
       </div>
 
-      <h2>Summary</h2>
-      <div id="summaryMetrics">
-        <div class="metric"><span>Scenario</span><strong>-</strong></div>
-        <div class="metric"><span>Status</span><strong>-</strong></div>
-        <div class="metric"><span>Steps</span><strong>-</strong></div>
-        <div class="metric"><span>Replans</span><strong>-</strong></div>
-      </div>
-
-      <h2>Agents</h2>
-      <div id="legend" class="legend"></div>
     </aside>
 
     <main>
@@ -299,8 +388,29 @@
         <button id="fitView" disabled>Fit</button>
       </div>
 
-      <div class="canvas-wrap">
-        <canvas id="canvas"></canvas>
+      <div class="replay-workspace">
+        <div class="canvas-wrap">
+          <canvas id="canvas"></canvas>
+        </div>
+
+        <div class="info-panel" aria-live="polite">
+          <section class="info-card">
+            <div class="info-title">Agents</div>
+            <div id="agentPanel" class="agent-list"></div>
+          </section>
+          <section class="info-card">
+            <div class="info-title">Summary</div>
+            <div id="summaryMetrics">
+              <div class="metric"><span>Scenario</span><strong>-</strong></div>
+              <div class="metric"><span>Status</span><strong>-</strong></div>
+              <div class="metric"><span>Current P(collision)</span><strong>-</strong></div>
+              <div class="metric"><span>Next P(collision)</span><strong>-</strong></div>
+              <div class="metric"><span>Max P(collision)</span><strong>-</strong></div>
+              <div class="metric"><span>Steps</span><strong>-</strong></div>
+              <div class="metric"><span>Replans</span><strong>-</strong></div>
+            </div>
+          </section>
+        </div>
       </div>
 
       <div class="statusbar">
@@ -314,7 +424,10 @@
     const palette = ["#d94b4b", "#2f7dd1", "#2f9d68", "#c77d14", "#7a52cc", "#0b8c9c", "#bd4a8c", "#53616f"];
     const state = {
       trajectories: new Map(),
+      replayFrames: [],
       summary: null,
+      scenarios: null,
+      scenarioName: "",
       scenario: null,
       currentTime: 0,
       maxTime: 0,
@@ -327,9 +440,17 @@
     const canvas = $("canvas");
     const ctx = canvas.getContext("2d");
 
-    $("trajectoryFile").addEventListener("change", loadTrajectoryFile);
-    $("summaryFile").addEventListener("change", loadSummaryFile);
-    $("scenariosFile").addEventListener("change", loadScenariosFile);
+    $("replayFolder").addEventListener("change", loadReplayFolder);
+    $("trajectoryFile").addEventListener("change", (event) => loadTrajectoryFile(event.target.files[0]));
+    $("summaryFile").addEventListener("change", (event) => loadSummaryFile(event.target.files[0]));
+    $("scenariosFile").addEventListener("change", (event) => loadScenariosFile(event.target.files[0]));
+    $("replayFramesFile").addEventListener("change", (event) => loadReplayFramesFile(event.target.files[0]));
+    $("scenarioSelect").addEventListener("change", (event) => {
+      setScenario(event.target.value);
+      state.bounds = computeBounds();
+      updateSummary();
+      draw();
+    });
     $("playPause").addEventListener("click", togglePlayback);
     $("stepBack").addEventListener("click", () => setTime(state.currentTime - 1));
     $("stepForward").addEventListener("click", () => setTime(state.currentTime + 1));
@@ -338,7 +459,7 @@
       state.bounds = computeBounds();
       draw();
     });
-    ["showVariance", "showReplans", "showScenario", "trailMode", "trailWindow"].forEach((id) => {
+    ["showVariance", "showFuturePlans", "showFutureVariance", "showReplans", "showScenario", "trailMode", "trailWindow"].forEach((id) => {
       $(id).addEventListener("input", draw);
     });
     canvas.addEventListener("mousemove", updateCursor);
@@ -357,45 +478,146 @@
       });
     }
 
-    async function loadTrajectoryFile(event) {
+    function findReplayFile(files, fileName) {
+      const lower = fileName.toLowerCase();
+      return files.find((file) => {
+        const path = (file.webkitRelativePath || file.name || "").replace(/\\/g, "/").toLowerCase();
+        return path.endsWith(`/${lower}`) || path === lower;
+      }) || null;
+    }
+
+    async function loadReplayFolder(event) {
       clearError();
       try {
-        const text = await readFile(event.target.files[0]);
+        const files = Array.from(event.target.files || []);
+        const trajectoryFile = findReplayFile(files, "trajectories.csv");
+        const summaryFile = findReplayFile(files, "summary.json");
+        const scenarioFile = findReplayFile(files, "scenario.json") || findReplayFile(files, "scenarios.json");
+        const replayFramesFile = findReplayFile(files, "replay_frames.json");
+        if (!trajectoryFile) {
+          throw new Error("Replay folder is missing trajectories.csv.");
+        }
+
+        await loadTrajectoryFile(trajectoryFile, false);
+        if (summaryFile) {
+          await loadSummaryFile(summaryFile, false);
+        } else {
+          state.summary = null;
+        }
+        if (scenarioFile) {
+          await loadScenariosFile(scenarioFile, false);
+        }
+        if (replayFramesFile) {
+          await loadReplayFramesFile(replayFramesFile, false);
+        } else {
+          state.replayFrames = [];
+          refreshMaxTime();
+        }
+        state.bounds = computeBounds();
+        updateSummary();
+        draw();
+
+        const loaded = ["trajectories.csv"];
+        if (summaryFile) {
+          loaded.push("summary.json");
+        }
+        if (scenarioFile) {
+          loaded.push(scenarioFile.name);
+        }
+        if (replayFramesFile) {
+          loaded.push("replay_frames.json");
+        }
+        $("status").textContent = `Loaded replay folder: ${loaded.join(", ")}.`;
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+
+    async function loadTrajectoryFile(file, redraw = true) {
+      clearError();
+      try {
+        const text = await readFile(file);
         state.trajectories = parseCsv(text);
-        state.maxTime = maxTimestep(state.trajectories);
+        refreshMaxTime();
         state.currentTime = 0;
         state.bounds = computeBounds();
         enableControls(true);
         updateTimeline();
-        updateLegend();
+        updateAgentPanel();
         updateSummary();
-        draw();
+        if (redraw) {
+          draw();
+        }
         $("status").textContent = `Loaded ${countRows(state.trajectories)} trajectory rows.`;
       } catch (error) {
+        if (!redraw) {
+          throw error;
+        }
         showError(error.message);
       }
     }
 
-    async function loadSummaryFile(event) {
+    async function loadSummaryFile(file, redraw = true) {
       clearError();
       try {
-        state.summary = JSON.parse(await readFile(event.target.files[0]));
-        updateSummary();
-        draw();
-      } catch (error) {
-        showError(error.message);
-      }
-    }
-
-    async function loadScenariosFile(event) {
-      clearError();
-      try {
-        const scenarios = JSON.parse(await readFile(event.target.files[0]));
-        state.scenario = findScenario(scenarios, state.summary && state.summary.scenario);
+        state.summary = JSON.parse(await readFile(file));
+        selectMatchingScenario();
         state.bounds = computeBounds();
         updateSummary();
-        draw();
+        if (redraw) {
+          draw();
+        }
       } catch (error) {
+        if (!redraw) {
+          throw error;
+        }
+        showError(error.message);
+      }
+    }
+
+    async function loadScenariosFile(file, redraw = true) {
+      clearError();
+      try {
+        const scenarios = JSON.parse(await readFile(file));
+        state.scenarios = scenarios;
+        populateScenarioSelect();
+        selectMatchingScenario();
+        state.bounds = computeBounds();
+        updateSummary();
+        if (redraw) {
+          draw();
+        }
+        $("status").textContent = state.scenarioName
+          ? `Loaded scenario geometry for ${state.scenarioName}.`
+          : "Loaded scenario geometry.";
+      } catch (error) {
+        if (!redraw) {
+          throw error;
+        }
+        showError(error.message);
+      }
+    }
+
+    async function loadReplayFramesFile(file, redraw = true) {
+      clearError();
+      try {
+        const payload = JSON.parse(await readFile(file));
+        const frames = Array.isArray(payload.frames) ? payload.frames : [];
+        state.replayFrames = frames
+          .filter((frame) => Number.isFinite(Number(frame.timestep)))
+          .sort((a, b) => Number(a.timestep) - Number(b.timestep));
+        refreshMaxTime();
+        state.bounds = computeBounds();
+        updateSummary();
+        updateTimeline();
+        if (redraw) {
+          draw();
+        }
+        $("status").textContent = `Loaded ${state.replayFrames.length} replay frames.`;
+      } catch (error) {
+        if (!redraw) {
+          throw error;
+        }
         showError(error.message);
       }
     }
@@ -443,16 +665,77 @@
       return trajectories;
     }
 
-    function findScenario(document, scenarioName) {
+    function scenarioRoot(document) {
+      if (!document || typeof document !== "object") {
+        return null;
+      }
+      if (isScenarioDocument(document)) {
+        const name = document.name || (state.summary && state.summary.scenario) || "scenario";
+        return { [name]: document };
+      }
       const root = document.scenarios && typeof document.scenarios === "object" ? document.scenarios : document;
       if (!root || typeof root !== "object") {
         return null;
       }
-      if (scenarioName && root[scenarioName]) {
-        return root[scenarioName];
+      return root;
+    }
+
+    function isScenarioDocument(value) {
+      if (!value || typeof value !== "object") {
+        return false;
       }
-      const first = Object.keys(root).find((key) => !key.startsWith("_") && root[key] && typeof root[key] === "object");
-      return first ? root[first] : null;
+      return Boolean(
+        value.bounds ||
+        Array.isArray(value.static_obstacles) ||
+        Array.isArray(value.dynamic_obstacles) ||
+        Array.isArray(value.agents)
+      );
+    }
+
+    function scenarioNames(document) {
+      const root = scenarioRoot(document);
+      if (!root) {
+        return [];
+      }
+      return Object.keys(root).filter((key) => !key.startsWith("_") && root[key] && typeof root[key] === "object");
+    }
+
+    function populateScenarioSelect() {
+      const select = $("scenarioSelect");
+      const names = scenarioNames(state.scenarios);
+      select.innerHTML = "";
+      if (names.length === 0) {
+        select.disabled = true;
+        select.appendChild(new Option("No scenarios found", ""));
+        return;
+      }
+      select.disabled = false;
+      for (const name of names) {
+        select.appendChild(new Option(name, name));
+      }
+    }
+
+    function selectMatchingScenario() {
+      if (!state.scenarios) {
+        return;
+      }
+      const names = scenarioNames(state.scenarios);
+      const requested = state.summary && state.summary.scenario;
+      const selected = requested && names.includes(requested) ? requested : (state.scenarioName || names[0] || "");
+      setScenario(selected);
+    }
+
+    function setScenario(name) {
+      const root = scenarioRoot(state.scenarios);
+      if (!root || !name || !root[name]) {
+        state.scenarioName = "";
+        state.scenario = null;
+        $("scenarioSelect").value = "";
+        return;
+      }
+      state.scenarioName = name;
+      state.scenario = root[name];
+      $("scenarioSelect").value = name;
     }
 
     function maxTimestep(trajectories) {
@@ -463,6 +746,15 @@
         }
       }
       return max;
+    }
+
+    function maxReplayTimestep() {
+      return state.replayFrames.reduce((max, frame) => Math.max(max, Number(frame.timestep) || 0), 0);
+    }
+
+    function refreshMaxTime() {
+      state.maxTime = Math.max(maxTimestep(state.trajectories), maxReplayTimestep());
+      state.currentTime = Math.max(0, Math.min(state.currentTime, state.maxTime));
     }
 
     function countRows(trajectories) {
@@ -480,6 +772,31 @@
           const radius = Math.sqrt(Math.max(row.variance, 0));
           points.push({ x: row.x - radius, y: row.y - radius });
           points.push({ x: row.x + radius, y: row.y + radius });
+        }
+      }
+
+      for (const frame of state.replayFrames) {
+        for (const agent of frame.agents || []) {
+          for (const node of agent.planned || []) {
+            const point = toPoint(node);
+            if (!point) {
+              continue;
+            }
+            const radius = Math.sqrt(Math.max(Number(node.variance) || 0, 0));
+            points.push({ x: point.x - radius, y: point.y - radius });
+            points.push({ x: point.x + radius, y: point.y + radius });
+          }
+        }
+        for (const prediction of frame.dynamic_predictions || []) {
+          for (const node of prediction.nodes || []) {
+            const point = toPoint(node);
+            if (!point) {
+              continue;
+            }
+            const radius = Math.sqrt(Math.max(Number(node.variance) || 0, 0));
+            points.push({ x: point.x - radius, y: point.y - radius });
+            points.push({ x: point.x + radius, y: point.y + radius });
+          }
         }
       }
 
@@ -501,7 +818,12 @@
           [toPoint(agent.start), toPoint(agent.goal)].filter(Boolean).forEach((point) => points.push(point));
         }
         for (const obstacle of env.dynamic_obstacles || []) {
-          dynamicWaypoints(obstacle).forEach((point) => points.push(point));
+          const waypoints = dynamicWaypoints(obstacle);
+          waypoints.forEach((point, index) => {
+            const radius = Math.sqrt(Math.max(dynamicVarianceAt(obstacle, index), 0));
+            points.push({ x: point.x - radius, y: point.y - radius });
+            points.push({ x: point.x + radius, y: point.y + radius });
+          });
         }
       }
 
@@ -575,6 +897,9 @@
       drawGrid(view);
       if ($("showScenario").checked) {
         drawScenario(view);
+      }
+      if ($("showFuturePlans").checked) {
+        drawPlannedTrajectories(view);
       }
       drawTrajectories(view);
       updateTimeline();
@@ -657,13 +982,23 @@
         }
         const screen = view.worldToScreen(center);
         ctx.fillStyle = "#1f2933";
+        ctx.strokeStyle = "#0f1720";
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(screen.x, screen.y, Number(obstacle.radius || 0) * view.scale, 0, Math.PI * 2);
         ctx.fill();
+        ctx.stroke();
       }
       for (const obstacle of env.dynamic_obstacles || []) {
         const points = dynamicWaypoints(obstacle);
         drawPolyline(view, points, "#b64ac8", 2, [6, 6]);
+        const current = dynamicStateAtTime(obstacle, state.currentTime);
+        if (current) {
+          if ($("showVariance").checked) {
+            drawDisc(view, current.point, current.variance, "#b64ac8");
+          }
+          drawPoint(view, current.point, "#b64ac8", 6, false);
+        }
       }
       for (const [index, agent] of (env.agents || []).entries()) {
         const color = palette[index % palette.length];
@@ -688,20 +1023,92 @@
         const current = rowAtTime(rows, state.currentTime);
         if (current) {
           if ($("showVariance").checked) {
-            const screen = view.worldToScreen(current);
-            ctx.save();
-            ctx.fillStyle = hexToRgba(color, 0.13);
-            ctx.strokeStyle = hexToRgba(color, 0.4);
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.arc(screen.x, screen.y, Math.sqrt(Math.max(current.variance, 0)) * view.scale, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
+            drawDisc(view, current, current.variance, color);
           }
           drawPoint(view, current, color, 7, false);
         }
       }
+    }
+
+    function drawPlannedTrajectories(view) {
+      const frame = frameAtTime(state.currentTime);
+      if (!frame) {
+        return;
+      }
+
+      for (const agent of frame.agents || []) {
+        const agentId = Number(agent.id);
+        const color = palette[Math.abs(agentId) % palette.length];
+        const nodes = (agent.planned || []).map((node) => ({
+          x: Number(node.x),
+          y: Number(node.y),
+          variance: Number(node.variance),
+          collisionProbability: Number(node.collision_probability),
+          timeStep: Number(node.time_step)
+        })).filter((node) => Number.isFinite(node.x) && Number.isFinite(node.y));
+
+        if (nodes.length === 0) {
+          continue;
+        }
+
+        drawPolyline(view, nodes, color, 2, [5, 5]);
+        for (const [nodeIndex, node] of nodes.entries()) {
+          if ($("showVariance").checked && $("showFutureVariance").checked) {
+            drawDisc(view, node, node.variance, color);
+          }
+          drawRiskNode(view, node, color, nodeIndex);
+          if (nodeIndex === 0 || nodeIndex === 1) {
+            drawProbabilityLabel(view, node, nodeIndex === 0 ? "now" : "+1", color);
+          }
+        }
+
+        const current = toPoint(agent);
+        if (agent.replanned_this_step && current) {
+          drawRing(view, current, "#f59f00", 11);
+        }
+      }
+
+      for (const prediction of frame.dynamic_predictions || []) {
+        const nodes = (prediction.nodes || []).map(toPoint).filter(Boolean);
+        drawPolyline(view, nodes, "#b64ac8", 1.5, [3, 7]);
+      }
+    }
+
+    function drawRiskNode(view, node, color, nodeIndex) {
+      const probability = Number.isFinite(node.collisionProbability) ? node.collisionProbability : 0;
+      const screen = view.worldToScreen(node);
+      const highRisk = probability >= 0.1;
+      const immediate = nodeIndex === 0 || nodeIndex === 1;
+      ctx.save();
+      ctx.fillStyle = highRisk ? "#c63b3b" : "#ffffff";
+      ctx.strokeStyle = nodeIndex === 1 ? "#f59f00" : (highRisk ? "#7f1d1d" : color);
+      ctx.lineWidth = immediate ? 3 : (highRisk ? 2.5 : 1.5);
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, immediate ? 6 : (highRisk ? 4.5 : 3.5), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawProbabilityLabel(view, node, label, color) {
+      const probability = Number.isFinite(node.collisionProbability) ? node.collisionProbability : 0;
+      const screen = view.worldToScreen(node);
+      const text = `${label} ${formatProbability(probability)}`;
+      ctx.save();
+      ctx.font = "12px Segoe UI, system-ui, sans-serif";
+      const width = ctx.measureText(text).width;
+      const x = screen.x + 9;
+      const y = screen.y - (label === "now" ? 12 : -16);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+      ctx.strokeStyle = hexToRgba(color, 0.55);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(x - 4, y - 14, width + 8, 18, 4);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#17202a";
+      ctx.fillText(text, x, y);
+      ctx.restore();
     }
 
     function visibleRows(rows) {
@@ -726,6 +1133,59 @@
         }
       }
       return candidate;
+    }
+
+    function frameAtTime(time) {
+      let candidate = null;
+      for (const frame of state.replayFrames) {
+        if (Number(frame.timestep) <= time) {
+          candidate = frame;
+        } else {
+          break;
+        }
+      }
+      return candidate;
+    }
+
+    function frameNodeRisk(frame, nodeIndex) {
+      if (!frame) {
+        return null;
+      }
+      let risk = null;
+      for (const agent of frame.agents || []) {
+        const node = (agent.planned || [])[nodeIndex];
+        if (!node) {
+          continue;
+        }
+        const probability = Number(node.collision_probability);
+        if (!Number.isFinite(probability)) {
+          continue;
+        }
+        risk = risk === null ? probability : Math.max(risk, probability);
+      }
+      return risk;
+    }
+
+    function dynamicStateAtTime(obstacle, time) {
+      const waypoints = dynamicWaypoints(obstacle);
+      if (waypoints.length === 0) {
+        return null;
+      }
+      const index = Math.max(0, Math.min(waypoints.length - 1, Math.round(time)));
+      return {
+        point: waypoints[index],
+        variance: dynamicVarianceAt(obstacle, index)
+      };
+    }
+
+    function dynamicVarianceAt(obstacle, index) {
+      if (Array.isArray(obstacle.variance_per_waypoint) && obstacle.variance_per_waypoint.length > 0) {
+        const clamped = Math.max(0, Math.min(obstacle.variance_per_waypoint.length - 1, index));
+        const variance = Number(obstacle.variance_per_waypoint[clamped]);
+        return Number.isFinite(variance) ? variance : 0;
+      }
+      const initial = Number(obstacle.initial_variance);
+      return Number.isFinite(initial) ? initial : 0;
     }
 
     function drawPolyline(view, points, color, width, dash) {
@@ -768,6 +1228,22 @@
       ctx.restore();
     }
 
+    function drawDisc(view, point, variance, color) {
+      if (!point || !Number.isFinite(Number(variance))) {
+        return;
+      }
+      const screen = view.worldToScreen(point);
+      ctx.save();
+      ctx.fillStyle = hexToRgba(color, 0.13);
+      ctx.strokeStyle = hexToRgba(color, 0.4);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, Math.sqrt(Math.max(Number(variance), 0)) * view.scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
     function drawRing(view, point, color, radius) {
       if (!point) {
         return;
@@ -785,6 +1261,7 @@
     function setTime(value) {
       state.currentTime = Math.max(0, Math.min(state.maxTime, Math.round(value)));
       updateTimeline();
+      updateSummary();
       draw();
     }
 
@@ -816,28 +1293,74 @@
       });
     }
 
-    function updateLegend() {
-      const legend = $("legend");
-      legend.innerHTML = "";
-      for (const agentId of state.trajectories.keys()) {
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function updateAgentPanel() {
+      const panel = $("agentPanel");
+      panel.innerHTML = "";
+      const frame = frameAtTime(state.currentTime);
+      const agents = frame && Array.isArray(frame.agents)
+        ? frame.agents
+        : Array.from(state.trajectories.keys()).map((agentId) => ({ id: agentId }));
+
+      for (const agent of agents) {
+        const agentId = Number(agent.id);
+        const planned = Array.isArray(agent.planned) ? agent.planned : [];
+        const currentRisk = Number(planned[0] && planned[0].collision_probability);
+        const nextRisk = Number(planned[1] && planned[1].collision_probability);
+        const colorIndex = Math.abs(Number.isFinite(agentId) ? agentId : 0) % palette.length;
+        const color = palette[colorIndex];
+        const label = agent.name || `Agent ${Number.isFinite(agentId) ? agentId : "-"}`;
+        const badgeClass = agent.at_goal ? "goal" : (agent.replanned_this_step ? "replan" : "");
+        const badgeText = agent.at_goal ? "goal" : (agent.replanned_this_step ? "replan" : "active");
         const item = document.createElement("div");
-        item.className = "legend-item";
-        item.innerHTML = `<span class="swatch" style="background:${palette[agentId % palette.length]}"></span><span>Agent ${agentId}</span>`;
-        legend.appendChild(item);
+        item.className = "agent-row";
+        item.innerHTML = `
+          <span class="swatch" style="background:${color}"></span>
+          <span class="agent-name">${escapeHtml(label)}</span>
+          <span class="agent-stat"><span>now</span><strong>${formatProbability(currentRisk)}</strong></span>
+          <span class="agent-stat"><span>+1</span><strong>${formatProbability(nextRisk)}</strong></span>
+          <span class="agent-badge ${badgeClass}">${badgeText}</span>
+        `;
+        panel.appendChild(item);
       }
     }
 
     function updateSummary() {
       const summary = state.summary || {};
+      const frame = frameAtTime(state.currentTime);
+      const currentRisk = frameNodeRisk(frame, 0);
+      const nextRisk = frameNodeRisk(frame, 1);
+      const risk = frame && Number.isFinite(Number(frame.max_collision_probability))
+        ? formatProbability(Number(frame.max_collision_probability))
+        : "-";
       const rows = [
-        ["Scenario", summary.scenario || "-"],
+        ["Scenario", summary.scenario || state.scenarioName || "-"],
         ["Status", typeof summary.success === "boolean" ? (summary.success ? "success" : "failed") : "-"],
+        ["Current P(collision)", currentRisk === null ? "-" : formatProbability(currentRisk)],
+        ["Next P(collision)", nextRisk === null ? "-" : formatProbability(nextRisk)],
+        ["Max P(collision)", risk],
         ["Steps", summary.total_steps ?? (countRows(state.trajectories) || "-")],
         ["Replans", summary.replan_count ?? "-"]
       ];
       $("summaryMetrics").innerHTML = rows
         .map(([label, value]) => `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`)
         .join("");
+      updateAgentPanel();
+    }
+
+    function formatProbability(value) {
+      if (!Number.isFinite(value)) {
+        return "-";
+      }
+      return `${(value * 100).toFixed(value < 0.01 ? 2 : 1)}%`;
     }
 
     function updateCursor(event) {

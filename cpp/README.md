@@ -7,331 +7,119 @@ C++17 implementation of the receding-horizon multi-agent Chance-Constrained RRT 
 ## Features
 
 - Single-agent CC-RRT with Monte Carlo chance constraints
-- Priority-based multi-agent coordination (Algorithms 1 & 2)
-- Receding horizon execution with Kalman measurement updates
-- Lazy collision check on the immediate horizon
-- Dynamic obstacles with predictable mean trajectories and growing uncertainty
-- Legacy Python-compatible collision mode (`--python-compat`)
-- Runtime JSON configuration — edit `config/` and re-run without rebuilding
-- Smoother executed paths via finer `motion_step`; optional RRT shortcut smoothing (`enable_path_smoothing`)
-- CSV/JSON trajectory export and benchmark summaries
-- Optional SFML visualization (static preview, live per-timestep simulation, post-run result view)
+- Priority-based multi-agent coordination
+- Receding-horizon execution with Kalman measurement updates
+- Lazy collision checks on the immediate horizon
+- Dynamic obstacles with predictable mean trajectories and uncertainty
+- Runtime JSON configuration in `config/`
+- CSV/JSON replay export
+- Browser replay viewer for active plans, collision risk, obstacles, replans, and covariance
 - Google Test unit test suite
 
 ## Build
 
 Requirements:
+
 - CMake 3.16+
-- C++17 compiler (GCC 9+, Clang 10+, or MSVC 2022)
-- Git (FetchContent downloads Eigen, nlohmann/json, and Google Test)
-- SFML 2.6 for visualization (optional — see platform notes below)
+- C++17 compiler
+- Git, used by CMake `FetchContent` for Eigen, nlohmann/json, and Google Test
+- Ninja, Make, or a supported CMake generator
 
-Unit tests are enabled by default (`CCRRT_BUILD_TESTS=ON`). After build, runtime config files are copied next to the executable (`ccrrt.json`, `config/scenarios.json`, etc.).
-
-### Windows
-
-SFML is vendored locally so you do not need a system install:
+Windows example:
 
 ```powershell
-cd cpp
-powershell -ExecutionPolicy Bypass -File scripts/fetch_sfml.ps1 -Toolchain mingw
-cmake -B build-mingw-viz-static -G "MinGW Makefiles" -DCCRRT_ENABLE_VISUALIZATION=ON
-cmake --build build-mingw-viz-static --target multi_agent_ccrrt
+cmake -S cpp -B cpp/build -G Ninja
+cmake --build cpp/build --target multi_agent_ccrrt ccrrt_tests
 ```
 
-This downloads SFML 2.6.1 into `third_party/sfml/` (`bin/`, `lib/`, `include/`). Use `-Toolchain mingw` for MinGW builds or `-Toolchain msvc` for Visual Studio builds. MinGW builds link bundled SFML statically to avoid extra MinGW runtime DLL issues. If you previously configured a build directory without SFML, configure a fresh directory or delete that build directory first.
-
-Executable: `build-mingw-viz-static/multi_agent_ccrrt.exe`
-
-Build without visualization:
-
-```powershell
-cmake -B build -DCCRRT_ENABLE_VISUALIZATION=OFF
-cmake --build build --config Release
-```
-
-### Linux
-
-Install build tools and SFML from your package manager.
-
-**Ubuntu / Debian:**
-
-```bash
-sudo apt update
-sudo apt install build-essential cmake git libsfml-dev
-```
-
-**Fedora / RHEL:**
-
-```bash
-sudo dnf install gcc-c++ cmake git SFML-devel
-```
-
-Configure and build (Release):
+Linux example:
 
 ```bash
 cd cpp
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DCCRRT_ENABLE_VISUALIZATION=ON
-cmake --build build
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target multi_agent_ccrrt ccrrt_tests
 ```
 
-Executables: `build/multi_agent_ccrrt`, `build/ccrrt_tests`
-
-On Linux, CMake uses the system SFML from `libsfml-dev` / `SFML-devel`. The Windows bundled SFML under `third_party/sfml/` is not used. A display server (X11 or Wayland) is required for SFML windows.
-
-Build without visualization (headless / CI):
-
-```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DCCRRT_ENABLE_VISUALIZATION=OFF
-cmake --build build
-```
-
-Run unit tests:
-
-```bash
-ctest --test-dir build --output-on-failure
-# or
-./build/ccrrt_tests
-```
-
-Disable tests: `-DCCRRT_BUILD_TESTS=OFF`.
+Unit tests are enabled by default with `CCRRT_BUILD_TESTS=ON`.
 
 ## Run
 
-A config file is **required** at startup. The executable auto-discovers `config/ccrrt.json` (or pass `--config <file>`). Scenarios are loaded from `config/scenarios.json` unless overridden inline in the config.
+A config file is required at startup. The executable auto-discovers `config/ccrrt.json` copied next to the executable, or you can pass one explicitly.
+
+```powershell
+cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\ccrrt.json --scenario figure5
+cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\ccrrt.json --scenario figure6
+cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\ccrrt.json --help
+```
+
+Linux:
 
 ```bash
-# Linux
 ./build/multi_agent_ccrrt --scenario figure5
-./build/multi_agent_ccrrt --scenario figure6 --no-viz
+./build/multi_agent_ccrrt --scenario figure6
 ./build/multi_agent_ccrrt --help
 ```
 
-```powershell
-# Windows (MSVC)
-./build/Release/multi_agent_ccrrt.exe --scenario figure5
-./build/Release/multi_agent_ccrrt.exe --scenario figure6 --no-viz
-./build/Release/multi_agent_ccrrt.exe --help
-```
-
-### Runtime configuration (no rebuild)
-
-Edit `config/ccrrt.json` (planner/run settings) and `config/scenarios.json` (obstacle positions, agent starts/goals, dynamic paths). Re-run the executable — no compile step needed.
-
-```bash
-# Linux — auto-loads config/ccrrt.json when present
-./build/multi_agent_ccrrt --no-viz
-./build/multi_agent_ccrrt --config config/python_compat.json --no-viz
-./build/multi_agent_ccrrt --mc-samples 100 --seed 42
-```
-
-```powershell
-# Windows
-./build/Release/multi_agent_ccrrt.exe --no-viz
-./build/Release/multi_agent_ccrrt.exe --config config/python_compat.json --no-viz
-./build/Release/multi_agent_ccrrt.exe --mc-samples 100 --seed 42
-```
-
-See **[CONFIG.md](CONFIG.md)** for the full schema, editing examples, and CLI reference. Per-field descriptions are inline in `config/ccrrt.json` (`"_field": "..."` before each setting). Recent changes are listed in **[CHANGELOG.md](CHANGELOG.md)**.
-
-### Performance benchmarks
-
-Six performance scenarios in `config/scenarios.json` stress different bottlenecks:
-
-| Scenario | What it tests |
-|----------|----------------|
-| `perf_cluttered` | 10 static obstacles, dense MC collision checks |
-| `perf_four_agents` | 4 agents, priority-chain planning |
-| `perf_narrow_passage` | Tight corridor, frequent replans |
-| `perf_long_paths` | 3 agents, long corner-to-corner horizons |
-| `perf_multi_dynamic` | 3 dynamic obstacles crossing agent paths |
-| `perf_stress` | 3 agents + clutter + 3 dynamic (combined load) |
-
-```bash
-# Linux
-./build/multi_agent_ccrrt --scenario perf_cluttered --no-viz
-./build/multi_agent_ccrrt --benchmark-all --mc-samples 200
-./build/multi_agent_ccrrt --list-scenarios
-```
-
-```powershell
-# Windows
-./build/Release/multi_agent_ccrrt.exe --scenario perf_cluttered --no-viz
-./build/Release/multi_agent_ccrrt.exe --benchmark-all --mc-samples 200
-./build/Release/multi_agent_ccrrt.exe --list-scenarios
-```
-
-`--benchmark-all` writes `output/benchmark/benchmark.csv` with columns: `scenario`, `success`, `elapsed_ms`, `replan_count`, `total_steps`, `max_timestep`. Each scenario also gets its own subdirectory under `output/benchmark/`.
-
-Use a lower `--mc-samples` value (e.g. 200) for faster iteration; use 1000 to match the paper.
-
-## Unit tests
-
-Google Test suite under `tests/` verifies geometry, Kalman filter, collision checkers, planners, JSON config loading, and export. See **Build** above for platform-specific `ctest` commands.
-
-Or run directly:
-
-```bash
-./build/ccrrt_tests          # Linux
-./build/Release/ccrrt_tests.exe   # Windows
-```
-
-| Test file | What it verifies |
-|-----------|------------------|
-| `test_geometry.cpp` | Distances, segment intersection, chi-squared thresholds |
-| `test_kalman_filter.cpp` | Predict/update variance, deterministic measurements |
-| `test_types.cpp` | Trajectory prediction variance growth, `Vec2` |
-| `test_collision_checker.cpp` | Monte Carlo node/edge safety |
-| `test_legacy_collision_checker.cpp` | Python-compatible deterministic checks |
-| `test_ccrrt_planner.cpp` | Single-agent plan success/failure |
-| `test_multi_agent_planner.cpp` | Multi-agent goals, metrics, legacy mode smoke |
-| `test_runtime_config.cpp` | JSON config + `figure5` integration |
-| `test_trajectory_exporter.cpp` | CSV/JSON/benchmark export |
-
-### Preview scenarios (no simulation)
-
-Visualize layouts from `config/scenarios.json` before running the planner.
-Requires SFML at build time.
-
-```bash
-# Linux
-./build/multi_agent_ccrrt --scenario figure5 --preview
-./build/multi_agent_ccrrt --preview-all
-```
-
-```powershell
-# Windows
-./build/Release/multi_agent_ccrrt.exe --scenario figure5 --preview
-./build/Release/multi_agent_ccrrt.exe --preview-all
-```
-
-Preview window legend:
-- **Black discs** — static obstacles
-- **Filled colored circle** — agent start (with faint confidence disc)
-- **Colored ring** — agent goal
-- **Faint line** — start-to-goal hint (not the planned path)
-- **Magenta trail** — dynamic obstacle mean waypoints
-
-### Live simulation visualization
-
-When `live_visualization` is enabled (default), the planner opens an SFML window that updates after each timestep:
-
-- **Solid colored lines** — executed path so far
-- **Faint lines** — current receding-horizon plan
-- **Filled disc** — current agent position (gold ring = replanned this step)
-- **Magenta** — dynamic obstacle current position and predicted trail
-
-Controls: **Space** = pause/resume, **N** = advance one step while paused, close window = stop simulation.
-
-```bash
-# Linux
-./build/multi_agent_ccrrt --scenario figure5
-./build/multi_agent_ccrrt --scenario figure5 --viz-delay-ms 50
-./build/multi_agent_ccrrt --scenario figure5 --no-live-viz
-./build/multi_agent_ccrrt --no-viz
-```
-
-```powershell
-# Windows
-./build/Release/multi_agent_ccrrt.exe --scenario figure5
-./build/Release/multi_agent_ccrrt.exe --scenario figure5 --viz-delay-ms 50
-./build/Release/multi_agent_ccrrt.exe --scenario figure5 --no-live-viz
-./build/Release/multi_agent_ccrrt.exe --no-viz
-```
-
-### CLI options
+Useful flags:
 
 | Flag | Description |
 |------|-------------|
-| `--help`, `-h` | Print usage and exit |
-| `--config <file>` | Load JSON config (default: `config/ccrrt.json` if present) |
-| `--scenario` | Any name from `--list-scenarios` (built-in or config-defined) |
-| `--benchmark-all` | Run all `perf_*` scenarios; write `benchmark.csv` |
-| `--preview` | Show scenario layout only; skip simulation |
-| `--preview-all` | Preview all scenarios in sequence |
-| `--list-scenarios` | Print scenario names and exit |
-| `--no-viz` | Disable all SFML visualization |
-| `--no-live-viz` | Skip live step-by-step viz (keep post-run static view) |
-| `--viz-delay-ms <n>` | Milliseconds between live viz frames (default: 150) |
-| `--output <dir>` | CSV/JSON output directory |
-| `--seed <n>` | RNG seed |
-| `--mc-samples <n>` | Monte Carlo samples per collision check |
-| `--path-smoothing` | Enable RRT shortcut path smoothing for this run |
-| `--python-compat` | Use `Multiagent CCRRT.py` planner settings |
+| `--config <file>` | Load JSON config |
+| `--scenario <name>` | Run a scenario from `scenarios.json` |
+| `--list-scenarios` | Print scenario names |
+| `--benchmark-all` | Run all performance scenarios and write `benchmark.csv` |
+| `--output <dir>` | Choose output directory |
+| `--seed <n>` | Override RNG seed |
+| `--mc-samples <n>` | Override Monte Carlo sample count |
+| `--path-smoothing` | Enable shortcut smoothing for this run |
+| `--python-compat` | Use Python-aligned planner settings |
 
-## Project layout
+## Visualization
 
-```
-include/ccrrt/     Public headers (Doxygen-documented)
-src/               Core library implementation
-config/            Runtime JSON: ccrrt.json, scenarios.json, python_compat.json
-tests/             Google Test unit tests
-scripts/           fetch_sfml.ps1 and other helpers
-scenarios/         Legacy C++ scenario factories (geometry lives in config/scenarios.json)
-main.cpp           CLI entry point
-CONFIG.md          Runtime configuration reference
-CHANGELOG.md       Recent feature and fix history
-ARCHITECTURE.md    System design, data flow, and paper mapping
-Doxyfile           API documentation generator config
-```
+Native C++ window visualization has been removed. The supported visualization path is the browser replay viewer:
 
-See **[ARCHITECTURE.md](ARCHITECTURE.md)** for layer diagrams, end-to-end data flow, algorithm walkthroughs, and extension points.
-
-## Code documentation
-
-All public types and functions use **Doxygen** comments (`@brief`, `@param`, `@return`).
-Headers declare the API; `.cpp` files include `@file` blocks and inline notes for
-non-obvious logic (e.g. Algorithm 1/2 steps, collision-check stages).
-
-| Location | What is documented |
-|----------|-------------------|
-| `include/ccrrt/*.hpp` | Every struct field, class, and public/private method |
-| `src/*.cpp` | File purpose, helper functions, algorithm step comments |
-| `config/ccrrt.json` | Per-field `_` comments for run/planner parameters |
-| `CONFIG.md` | Config schema, scenario format, editing examples |
-| `main.cpp` | CLI flow and exit codes |
-| `include/ccrrt/ccrrt.hpp` | Umbrella header + architecture overview |
-
-Generate HTML docs (requires [Doxygen](https://www.doxygen.nl/)):
-
-```bash
-cd cpp
-doxygen Doxyfile
-# Open docs/doxygen/html/index.html
-```
-
-## Algorithm parameters
-
-Shipped defaults in `config/ccrrt.json` (override there without rebuilding):
-
-| Parameter | Default in `ccrrt.json` | Paper (Section 5) |
-|-----------|-------------------------|-------------------|
-| Step size (`expand_distance`) | 0.5 | 0.5 |
-| Collision bound M | 0.2 | 0.2 |
-| Confidence alpha | 0.99 | 0.99 |
-| MC samples | 1000 | 1000 |
-| Max timesteps | 500 | 500 |
-| Initial variance | 0.2 | 0.2 |
-| Process noise | 0.2 | 0.2 |
-| Measurement noise | 0.2 | 0.2 |
-
-C++ fallbacks when a field is omitted from JSON are defined in `include/ccrrt/config.hpp`.
-
-## Output
+1. Run a scenario.
+2. Open `tools/replay_viewer.html` in Chrome or Edge.
+3. Select the output folder, for example `output/figure5`.
 
 Each run writes:
-- `trajectories.csv` — executed agent steps (position, variance, replanned flag per step)
-- `summary.json` — `success`, `replan_count`, `elapsed_ms`, `total_steps`, `max_timestep`, per-agent step counts
 
-## Replay viewer
+- `trajectories.csv` - executed agent steps
+- `summary.json` - success, replans, timing, and step counts
+- `scenario.json` - bounds, obstacles, starts/goals, dynamic paths, and covariance
+- `replay_frames.json` - per-timestep active plans, future-node covariance, and collision probability
 
-SFML remains the native live visualizer. For replay and inspection after a run,
-open `tools/replay_viewer.html` in a browser and select:
+The replay viewer loads those files from the folder automatically and shows executed paths, current active plans for every agent, covariance discs at current and future nodes, current/next/max collision probability at the selected timestep, static obstacles, dynamic obstacles, and replan markers.
 
-- `output/<scenario>/trajectories.csv`
-- `output/<scenario>/summary.json`
-- `cpp/config/scenarios.json` for obstacles, starts, goals, and dynamic paths
+## Runtime Configuration
 
-The viewer provides playback controls, uncertainty discs, replan markers, fitted
-workspace bounds, and optional scenario geometry without adding another build
-dependency.
+Edit `cpp/config/ccrrt.json` for planner/run settings and `cpp/config/scenarios.json` for geometry. Re-run the executable after changing JSON; no rebuild is required.
+
+For detailed config docs, see [CONFIG.md](CONFIG.md).
+
+## Tests
+
+```powershell
+cpp\build\ccrrt_tests.exe
+```
+
+or:
+
+```bash
+ctest --test-dir cpp/build --output-on-failure
+```
+
+## Project Layout
+
+```text
+cpp/
+  main.cpp
+  include/ccrrt/
+  src/
+  config/
+  tests/
+  CONFIG.md
+  ARCHITECTURE.md
+tools/
+  replay_viewer.html
+```

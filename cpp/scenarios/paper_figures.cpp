@@ -71,7 +71,7 @@ Environment makeFigure5Scenario() {
     DynamicObstacleSpec dynamic_obstacle;
     dynamic_obstacle.id = 0;
     // Finer steps so tree-depth time aligns with the obstacle's vertical motion.
-    dynamic_obstacle.waypoints = verticalDynamicObstacle(10.0, 0.0, 12.0, 0.5);
+    dynamic_obstacle.waypoints = verticalDynamicObstacle(10.0, 12.0, 0.0, 0.2);
     dynamic_obstacle.initial_variance = 0.1;
     env.dynamic_obstacles = {dynamic_obstacle};
 
@@ -99,7 +99,7 @@ Environment makeFigure7Scenario() {
     DynamicObstacleSpec dynamic_obstacle;
     dynamic_obstacle.id = 0;
     // Dynamic obstacle moves downward, forcing blue to wait before crossing.
-    dynamic_obstacle.waypoints = verticalDynamicObstacle(9.0, 15.0, 1.0, 0.5);
+    dynamic_obstacle.waypoints = verticalDynamicObstacle(9.0, 15.0, 1.0, 0.2);
     dynamic_obstacle.initial_variance = 0.1;
     env.dynamic_obstacles = {dynamic_obstacle};
     return env;

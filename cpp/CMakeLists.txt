@@ -5,10 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(CCRRT_ENABLE_VISUALIZATION "Build with SFML visualization" ON)
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
 include(FetchContent)
 FetchContent_Declare(
     eigen
@@ -44,35 +40,9 @@ target_include_directories(ccrrt_core
 
 target_link_libraries(ccrrt_core PUBLIC Eigen3::Eigen nlohmann_json::nlohmann_json)
 
-if(CCRRT_ENABLE_VISUALIZATION)
-    include(FindBundledSFML)
-    if(SFML_FOUND)
-        target_sources(ccrrt_core PRIVATE src/sfml_renderer.cpp src/sfml_live_visualizer.cpp)
-        target_compile_definitions(ccrrt_core PUBLIC CCRRT_HAS_SFML=1)
-        target_link_libraries(ccrrt_core PUBLIC sfml-graphics sfml-window sfml-system)
-    else()
-        message(WARNING "SFML not found. Run: powershell -File scripts/fetch_sfml.ps1")
-        message(WARNING "Building without visualization.")
-        target_compile_definitions(ccrrt_core PUBLIC CCRRT_HAS_SFML=0)
-    endif()
-else()
-    target_compile_definitions(ccrrt_core PUBLIC CCRRT_HAS_SFML=0)
-endif()
-
 add_executable(multi_agent_ccrrt main.cpp)
 target_include_directories(multi_agent_ccrrt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(multi_agent_ccrrt PRIVATE ccrrt_core)
-
-# Copy bundled SFML DLLs next to the executable on Windows.
-if(CCRRT_SFML_DLL_DIR)
-    add_custom_command(
-        TARGET multi_agent_ccrrt POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CCRRT_SFML_DLL_DIR}"
-            "$<TARGET_FILE_DIR:multi_agent_ccrrt>"
-        COMMENT "Copying bundled SFML DLLs to output directory"
-    )
-endif()
 
 add_custom_command(
     TARGET multi_agent_ccrrt POST_BUILD

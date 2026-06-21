@@ -18,13 +18,13 @@ Parameter descriptions are inline in the config files (`"_field_name": "..."` im
 cd cpp
 
 # Requires config/ccrrt.json (loads config/scenarios.json automatically)
-./build/Release/multi_agent_ccrrt.exe --no-viz
+./build/Release/multi_agent_ccrrt.exe
 
 # Edit obstacle positions in config/scenarios.json, then re-run:
 #   "static_obstacles": [{ "center": [7.0, 4.0], "radius": 2.0 }, ...]
 
 # Python-compat preset
-./build/Release/multi_agent_ccrrt.exe --config config/python_compat.json --no-viz
+./build/Release/multi_agent_ccrrt.exe --config config/python_compat.json
 
 # CLI overrides config
 ./build/Release/multi_agent_ccrrt.exe --scenario figure6 --seed 7 --mc-samples 100
@@ -59,7 +59,7 @@ A config file is **required** at startup (auto-discovered or via `--config`).
 | Field | Description |
 |-------|-------------|
 | `scenarios_file` | Path relative to the config file's directory (default: `scenarios.json`) |
-| `run` | Which scenario to run, visualization, output paths |
+| `run` | Which scenario to run and where to write output |
 | `planner` | Algorithm parameters |
 | `scenarios` | Optional inline scenarios; **override** entries in `scenarios_file` by name |
 
@@ -217,11 +217,6 @@ Inline `scenarios` entries replace the same-named entry from `scenarios_file`.
 |------|--------------|
 | `--scenario <name>` | `run.scenario` |
 | `--output <dir>` | `run.output_directory` |
-| `--no-viz` | `run.enable_visualization = false` |
-| `--no-live-viz` | `run.live_visualization = false` |
-| `--viz-delay-ms <n>` | `run.viz_step_delay_ms` |
-| `--preview` | `run.preview_only = true` |
-| `--preview-all` | `run.preview_all = true` |
 | `--list-scenarios` | `run.list_scenarios = true` |
 | `--benchmark-all` | `run.benchmark_all = true` |
 | `--seed <n>` | `planner.rng_seed` |

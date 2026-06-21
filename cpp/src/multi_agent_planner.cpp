@@ -17,12 +17,15 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <iostream>
 #include <memory>
 
 namespace ccrrt {
 
 namespace {
+
+constexpr int kVisualizationRiskSamples = 100;
 
 double effectiveMotionStep(const PlannerConfig& config) {
     if (config.motion_step <= 0.0) {
@@ -57,6 +60,20 @@ std::vector<double> variancesAlongPlannedEdge(
         variances.push_back(start_node.variance * (1.0 - alpha) + end_node.variance * alpha);
     }
     return variances;
+}
+
+PlannerConfig visualizationRiskConfig(const PlannerConfig& config) {
+    PlannerConfig risk_config = config;
+    risk_config.mc_samples = std::min(config.mc_samples, kVisualizationRiskSamples);
+    return risk_config;
+}
+
+std::uint32_t mixSeed(std::uint32_t seed, int timestep, int agent_id, int node_time_step) {
+    std::uint32_t value = seed + 0x9e3779b9u;
+    value ^= static_cast<std::uint32_t>(timestep + 0x7f4a7c15) + (value << 6) + (value >> 2);
+    value ^= static_cast<std::uint32_t>(agent_id + 0x85ebca6b) + (value << 6) + (value >> 2);
+    value ^= static_cast<std::uint32_t>(node_time_step + 0xc2b2ae35) + (value << 6) + (value >> 2);
+    return value;
 }
 
 }  // namespace
@@ -247,6 +264,7 @@ SimulationFrame MultiAgentPlanner::buildFrame(
     frame.environment = environment;
     frame.dynamic_predictions = dynamic_predictions;
     frame.agents.reserve(agents.size());
+    const PlannerConfig risk_config = visualizationRiskConfig(config_);
 
     for (const auto& agent : agents) {
         AgentSnapshot snapshot;
@@ -259,6 +277,29 @@ SimulationFrame MultiAgentPlanner::buildFrame(
         if (!agent.executed.empty()) {
             snapshot.replanned_this_step = agent.executed.back().replanned;
         }
+
+        const auto agent_predictions = collectAgentPredictions(agents, agent.spec.id);
+        snapshot.planned_collision_probabilities.reserve(snapshot.planned.nodes.size());
+        for (const auto& node : snapshot.planned.nodes) {
+            std::mt19937 risk_rng(mixSeed(
+                static_cast<std::uint32_t>(config_.rng_seed),
+                timestep,
+                agent.spec.id,
+                node.time_step));
+            MonteCarloCollisionChecker risk_checker(risk_config, risk_rng);
+            const GaussianState robot{node.position, node.variance};
+            const double probability = risk_checker.estimateCollisionProbability(
+                robot,
+                environment.static_obstacles,
+                agent_predictions,
+                dynamic_predictions,
+                node.time_step);
+            snapshot.planned_collision_probabilities.push_back(probability);
+            snapshot.max_collision_probability =
+                std::max(snapshot.max_collision_probability, probability);
+        }
+        frame.max_collision_probability =
+            std::max(frame.max_collision_probability, snapshot.max_collision_probability);
         frame.agents.push_back(std::move(snapshot));
     }
     return frame;

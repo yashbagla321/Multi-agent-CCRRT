@@ -9,21 +9,6 @@
     "_output_directory": "CSV/JSON output folder. Empty string uses output/<scenario>.",
     "output_directory": "",
 
-    "_enable_visualization": "Master switch for SFML visualization. Default: true. CLI: --no-viz",
-    "enable_visualization": true,
-
-    "_live_visualization": "Step-by-step live window during simulation. Default: true. CLI: --no-live-viz",
-    "live_visualization": true,
-
-    "_viz_step_delay_ms": "Milliseconds between live visualization frames. Default: 150. CLI: --viz-delay-ms",
-    "viz_step_delay_ms": 150,
-
-    "_preview_only": "Show scenario layout only; skip simulation. CLI: --preview",
-    "preview_only": false,
-
-    "_preview_all": "Preview every scenario in sequence. CLI: --preview-all",
-    "preview_all": false,
-
     "_list_scenarios": "Print scenario list and exit. CLI: --list-scenarios",
     "list_scenarios": false,
 
