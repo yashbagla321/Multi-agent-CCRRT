@@ -8,8 +8,13 @@ if(EXISTS "${CCRRT_SFML_ROOT}/lib/cmake/SFML/SFMLConfig.cmake")
     message(STATUS "Using bundled SFML from ${CCRRT_SFML_ROOT}")
 endif()
 
+if(MINGW)
+    set(SFML_STATIC_LIBRARIES TRUE)
+    message(STATUS "MinGW detected; linking bundled SFML statically")
+endif()
+
 find_package(SFML 2.6 COMPONENTS graphics window system QUIET)
 
-if(SFML_FOUND AND EXISTS "${CCRRT_SFML_ROOT}/bin")
+if(SFML_FOUND AND NOT SFML_STATIC_LIBRARIES AND EXISTS "${CCRRT_SFML_ROOT}/bin")
     set(CCRRT_SFML_DLL_DIR "${CCRRT_SFML_ROOT}/bin" CACHE PATH "Bundled SFML DLL directory")
 endif()

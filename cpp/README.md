@@ -34,14 +34,14 @@ SFML is vendored locally so you do not need a system install:
 
 ```powershell
 cd cpp
-powershell -ExecutionPolicy Bypass -File scripts/fetch_sfml.ps1
-cmake -B build -DCCRRT_ENABLE_VISUALIZATION=ON
-cmake --build build --config Release
+powershell -ExecutionPolicy Bypass -File scripts/fetch_sfml.ps1 -Toolchain mingw
+cmake -B build-mingw-viz-static -G "MinGW Makefiles" -DCCRRT_ENABLE_VISUALIZATION=ON
+cmake --build build-mingw-viz-static --target multi_agent_ccrrt
 ```
 
-This downloads SFML 2.6.1 (MSVC 64-bit) into `third_party/sfml/` (`bin/`, `lib/`, `include/`). CMake uses that path automatically and copies DLLs next to the executable after build.
+This downloads SFML 2.6.1 into `third_party/sfml/` (`bin/`, `lib/`, `include/`). Use `-Toolchain mingw` for MinGW builds or `-Toolchain msvc` for Visual Studio builds. MinGW builds link bundled SFML statically to avoid extra MinGW runtime DLL issues. If you previously configured a build directory without SFML, configure a fresh directory or delete that build directory first.
 
-Executables: `build/Release/multi_agent_ccrrt.exe`, `build/Release/ccrrt_tests.exe`
+Executable: `build-mingw-viz-static/multi_agent_ccrrt.exe`
 
 Build without visualization:
 

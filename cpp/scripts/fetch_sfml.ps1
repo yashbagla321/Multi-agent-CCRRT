@@ -1,15 +1,41 @@
+param(
+    [ValidateSet("auto", "mingw", "msvc")]
+    [string]$Toolchain = "auto"
+)
+
 # Downloads SFML 2.6.1 prebuilt libraries into cpp/third_party/sfml/
-# Usage: powershell -ExecutionPolicy Bypass -File scripts/fetch_sfml.ps1
+# Usage:
+#   powershell -ExecutionPolicy Bypass -File scripts/fetch_sfml.ps1
+#   powershell -ExecutionPolicy Bypass -File scripts/fetch_sfml.ps1 -Toolchain mingw
+#   powershell -ExecutionPolicy Bypass -File scripts/fetch_sfml.ps1 -Toolchain msvc
 
 $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $Dest = Join-Path $Root "third_party\sfml"
-$ZipUrl = "https://github.com/SFML/SFML/releases/download/2.6.1/SFML-2.6.1-windows-vc17-64-bit.zip"
-$TempZip = Join-Path $env:TEMP "SFML-2.6.1-windows-vc17-64-bit.zip"
+
+if ($Toolchain -eq "auto") {
+    if (Get-Command g++ -ErrorAction SilentlyContinue) {
+        $Toolchain = "mingw"
+    } elseif (Get-Command cl -ErrorAction SilentlyContinue) {
+        $Toolchain = "msvc"
+    } else {
+        throw "Could not detect g++ or cl. Pass -Toolchain mingw or -Toolchain msvc explicitly."
+    }
+}
+
+if ($Toolchain -eq "mingw") {
+    $ArchiveName = "SFML-2.6.1-windows-gcc-13.1.0-mingw-64-bit.zip"
+    Write-Host "Downloading SFML 2.6.1 (MinGW GCC 13.1 64-bit)..."
+} else {
+    $ArchiveName = "SFML-2.6.1-windows-vc17-64-bit.zip"
+    Write-Host "Downloading SFML 2.6.1 (MSVC vc17 64-bit)..."
+}
+
+$ZipUrl = "https://github.com/SFML/SFML/releases/download/2.6.1/$ArchiveName"
+$TempZip = Join-Path $env:TEMP $ArchiveName
 $TempExtract = Join-Path $env:TEMP "sfml-extract"
 
-Write-Host "Downloading SFML 2.6.1 (MSVC 64-bit)..."
 Invoke-WebRequest -Uri $ZipUrl -OutFile $TempZip -UseBasicParsing
 
 if (Test-Path $Dest) {
