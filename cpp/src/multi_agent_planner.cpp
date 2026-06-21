@@ -25,8 +25,10 @@ namespace ccrrt {
 
 namespace {
 
+/** @brief Monte Carlo sample cap used only for replay risk estimates. */
 constexpr int kVisualizationRiskSamples = 100;
 
+/** @brief Returns the physical motion step used for one execution tick. */
 double effectiveMotionStep(const PlannerConfig& config) {
     if (config.motion_step <= 0.0) {
         return config.expand_distance;
@@ -34,6 +36,7 @@ double effectiveMotionStep(const PlannerConfig& config) {
     return std::min(config.motion_step, config.expand_distance);
 }
 
+/** @brief Moves from @p from toward @p to by at most @p step_size. */
 Vec2 advanceToward(const Vec2& from, const Vec2& to, double step_size) {
     const Vec2 delta = to - from;
     const double distance = delta.norm();
@@ -43,6 +46,7 @@ Vec2 advanceToward(const Vec2& from, const Vec2& to, double step_size) {
     return from + delta * (step_size / distance);
 }
 
+/** @brief Interpolates variance at every integer timestep along a planned edge. */
 std::vector<double> variancesAlongPlannedEdge(
     const TrajectoryNode& start_node,
     const TrajectoryNode& end_node) {
@@ -62,12 +66,14 @@ std::vector<double> variancesAlongPlannedEdge(
     return variances;
 }
 
+/** @brief Creates a lower-cost config for replay-only collision probability estimates. */
 PlannerConfig visualizationRiskConfig(const PlannerConfig& config) {
     PlannerConfig risk_config = config;
     risk_config.mc_samples = std::min(config.mc_samples, kVisualizationRiskSamples);
     return risk_config;
 }
 
+/** @brief Mixes frame/agent/node ids into a deterministic seed for replay risk sampling. */
 std::uint32_t mixSeed(std::uint32_t seed, int timestep, int agent_id, int node_time_step) {
     std::uint32_t value = seed + 0x9e3779b9u;
     value ^= static_cast<std::uint32_t>(timestep + 0x7f4a7c15) + (value << 6) + (value >> 2);

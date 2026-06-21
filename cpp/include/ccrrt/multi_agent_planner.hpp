@@ -45,7 +45,7 @@ public:
     SimulationResult run(const Environment& environment, const std::string& scenario_name);
 
     /**
-     * @brief Runs simulation with optional per-timestep observer (live visualization).
+     * @brief Runs simulation with optional per-timestep replay observer.
      * @param observer Receives frames after initial planning and each timestep; may abort.
      */
     SimulationResult run(
@@ -54,6 +54,7 @@ public:
         ISimulationObserver* observer);
 
 private:
+    /** @brief Builds a replay snapshot from the current runtime state. */
     SimulationFrame buildFrame(
         const Environment& environment,
         const std::string& scenario_name,
@@ -63,6 +64,7 @@ private:
         bool initial_plan_ready,
         bool simulation_complete) const;
 
+    /** @brief Dispatches a frame to @p observer; returns true when simulation should continue. */
     bool notifyObserver(
         ISimulationObserver* observer,
         const SimulationFrame& frame) const;

@@ -1,3 +1,8 @@
+/**
+ * @file scenarios.cpp
+ * @brief Legacy scenario registry helpers for built-in C++ scenarios.
+ */
+
 #include "scenarios/scenarios.hpp"
 
 #include "scenarios/paper_figures.hpp"
@@ -8,6 +13,7 @@ namespace ccrrt {
 
 namespace {
 
+/** @brief Wraps a paper scenario environment with registry metadata. */
 ScenarioEntry paperEntry(const std::string& name, const std::string& description, Environment env) {
     ScenarioEntry entry;
     entry.name = name;
@@ -17,6 +23,7 @@ ScenarioEntry paperEntry(const std::string& name, const std::string& description
     return entry;
 }
 
+/** @brief Wraps a performance scenario environment with registry metadata. */
 ScenarioEntry perfEntry(const std::string& name, const std::string& description, Environment env) {
     ScenarioEntry entry;
     entry.name = name;
@@ -28,6 +35,7 @@ ScenarioEntry perfEntry(const std::string& name, const std::string& description,
 
 }  // namespace
 
+/** @brief Returns built-in paper scenario entries. */
 std::vector<ScenarioEntry> paperScenarios() {
     return {
         paperEntry("figure5", "Paper Fig. 5: 2 agents, 4 static, 1 dynamic", makeFigure5Scenario()),
@@ -40,6 +48,7 @@ std::vector<ScenarioEntry> paperScenarios() {
     };
 }
 
+/** @brief Returns built-in performance benchmark entries. */
 std::vector<ScenarioEntry> performanceScenarios() {
     return {
         perfEntry(
@@ -69,6 +78,7 @@ std::vector<ScenarioEntry> performanceScenarios() {
     };
 }
 
+/** @brief Returns paper and performance scenarios in one list. */
 std::vector<ScenarioEntry> allScenarios() {
     auto scenarios = paperScenarios();
     const auto perf = performanceScenarios();
@@ -76,6 +86,7 @@ std::vector<ScenarioEntry> allScenarios() {
     return scenarios;
 }
 
+/** @brief Returns the scenarios included in benchmark-all runs. */
 std::vector<ScenarioEntry> benchmarkScenarios() {
     return performanceScenarios();
 }

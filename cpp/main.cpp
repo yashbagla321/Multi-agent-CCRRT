@@ -17,8 +17,10 @@
 
 namespace {
 
+/** @brief Collects replay frames during a single scenario run for JSON export. */
 class ReplayFrameCollector final : public ccrrt::ISimulationObserver {
 public:
+    /** @brief Stores @p frame and allows the simulation to continue. */
     bool onFrame(const ccrrt::SimulationFrame& frame) override {
         frames.push_back(frame);
         return true;
@@ -27,6 +29,7 @@ public:
     std::vector<ccrrt::SimulationFrame> frames;
 };
 
+/** @brief Prints command-line usage and supported runtime options. */
 void printUsage() {
     std::cout << "Usage: multi_agent_ccrrt [options]\n"
               << "\nConfiguration (no rebuild needed):\n"
@@ -43,10 +46,12 @@ void printUsage() {
               << "  --python-compat    Use Multiagent CCRRT.py planner settings\n"
               << "\nVisualization:\n"
               << "  Run output is written as CSV/JSON. Open tools/replay_viewer.html and\n"
-              << "  select the output folder to replay paths, obstacles, and covariance.\n"
+              << "  select the output folder to replay paths, plans, obstacles, covariance,\n"
+              << "  replans, and current/next/max collision probability.\n"
               << "\nSee CONFIG.md for the full schema; config/ccrrt.json has per-field descriptions.\n";
 }
 
+/** @brief Prints scenarios grouped by paper and performance categories. */
 void printScenarioList(const ccrrt::ScenarioRegistry& registry) {
     std::cout << std::left;
     std::cout << "\nPaper scenarios:\n";
@@ -60,6 +65,7 @@ void printScenarioList(const ccrrt::ScenarioRegistry& registry) {
     std::cout << '\n';
 }
 
+/** @brief Prints the compact run summary shown after each scenario. */
 void printResultSummary(const ccrrt::SimulationResult& result) {
     std::cout << std::fixed << std::setprecision(2);
     std::cout << "Success:      " << (result.success ? "yes" : "no") << '\n';
@@ -69,6 +75,7 @@ void printResultSummary(const ccrrt::SimulationResult& result) {
     std::cout << "Max timestep: " << result.max_timestep << '\n';
 }
 
+/** @brief Loads the JSON config and applies command-line overrides. */
 ccrrt::AppConfig loadConfiguration(int argc, char* argv[]) {
     ccrrt::AppConfig app;
 
@@ -92,6 +99,7 @@ ccrrt::AppConfig loadConfiguration(int argc, char* argv[]) {
     return app;
 }
 
+/** @brief Runs one selected scenario and writes all replay artifacts. */
 int runSingleScenario(
     const ccrrt::ScenarioEntry& scenario,
     ccrrt::PlannerConfig config,
@@ -131,6 +139,7 @@ int runSingleScenario(
     return result.success ? 0 : 2;
 }
 
+/** @brief Runs all benchmark scenarios and writes per-scenario outputs plus benchmark.csv. */
 int runBenchmarkAll(
     const ccrrt::ScenarioRegistry& registry,
     ccrrt::PlannerConfig config,
@@ -182,6 +191,7 @@ int runBenchmarkAll(
     return 0;
 }
 
+/** @brief Returns true when the argv list contains --help or -h. */
 bool hasHelpFlag(int argc, char* argv[]) {
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];

@@ -13,6 +13,7 @@
 namespace ccrrt {
 namespace scenario_helpers {
 
+/** @brief Creates an empty environment with the requested square workspace bounds. */
 inline Environment emptyEnvironment(double bounds_min = -2.0, double bounds_max = 17.0) {
     Environment env;
     env.bounds_min = bounds_min;
@@ -20,6 +21,7 @@ inline Environment emptyEnvironment(double bounds_min = -2.0, double bounds_max 
     return env;
 }
 
+/** @brief Convenience factory for an agent specification. */
 inline AgentSpec makeAgent(int id, int priority, const std::string& name, Vec2 start, Vec2 goal) {
     AgentSpec agent;
     agent.id = id;
@@ -30,6 +32,7 @@ inline AgentSpec makeAgent(int id, int priority, const std::string& name, Vec2 s
     return agent;
 }
 
+/** @brief Generates equally spaced waypoints from @p from to @p to. */
 inline std::vector<Vec2> lineWaypoints(Vec2 from, Vec2 to, double step) {
     std::vector<Vec2> waypoints;
     const double dx = to.x - from.x;
@@ -47,14 +50,17 @@ inline std::vector<Vec2> lineWaypoints(Vec2 from, Vec2 to, double step) {
     return waypoints;
 }
 
+/** @brief Generates a vertical dynamic-obstacle waypoint path. */
 inline std::vector<Vec2> verticalPath(double x, double y_start, double y_end, double step) {
     return lineWaypoints({x, y_start}, {x, y_end}, step);
 }
 
+/** @brief Generates a horizontal dynamic-obstacle waypoint path. */
 inline std::vector<Vec2> horizontalPath(double y, double x_start, double x_end, double step) {
     return lineWaypoints({x_start, y}, {x_end, y}, step);
 }
 
+/** @brief Convenience factory for a dynamic obstacle with default variance. */
 inline DynamicObstacleSpec makeDynamicObstacle(int id, const std::vector<Vec2>& waypoints) {
     DynamicObstacleSpec obstacle;
     obstacle.id = id;

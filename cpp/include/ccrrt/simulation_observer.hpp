@@ -1,6 +1,6 @@
 /**
  * @file simulation_observer.hpp
- * @brief Per-timestep simulation snapshots for live visualization.
+ * @brief Per-timestep simulation snapshots for replay export and visualization.
  */
 
 #pragma once
@@ -36,7 +36,7 @@ struct AgentSnapshot {
 };
 
 /**
- * @brief Full world state at one visualization frame.
+ * @brief Full world state at one replay frame.
  */
 struct SimulationFrame {
     std::string scenario_name;
@@ -59,11 +59,13 @@ struct SimulationFrame {
 /**
  * @brief Receives simulation frames during MultiAgentPlanner::run().
  *
- * Return false to abort the simulation early (e.g. user closed the window).
+ * Return false to abort the simulation early.
  */
 class ISimulationObserver {
 public:
     virtual ~ISimulationObserver() = default;
+
+    /** @brief Handles one simulation frame; return false to stop the run. */
     virtual bool onFrame(const SimulationFrame& frame) = 0;
 };
 

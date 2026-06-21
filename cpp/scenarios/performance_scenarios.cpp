@@ -19,6 +19,7 @@ using scenario_helpers::makeAgent;
 using scenario_helpers::makeDynamicObstacle;
 using scenario_helpers::verticalPath;
 
+/** @brief Builds a dense static-obstacle benchmark environment. */
 Environment makePerfClutteredScenario() {
     Environment env = emptyEnvironment();
     env.static_obstacles = {
@@ -37,6 +38,7 @@ Environment makePerfClutteredScenario() {
     return env;
 }
 
+/** @brief Builds a four-agent coordination benchmark environment. */
 Environment makePerfFourAgentsScenario() {
     Environment env = emptyEnvironment();
     env.static_obstacles = {
@@ -58,6 +60,7 @@ Environment makePerfFourAgentsScenario() {
     return env;
 }
 
+/** @brief Builds a benchmark with a narrow passage and crossing agents. */
 Environment makePerfNarrowPassageScenario() {
     Environment env = emptyEnvironment();
     // Gap near y = 8, x in [6, 10] — forces detours and frequent replans.
@@ -79,6 +82,7 @@ Environment makePerfNarrowPassageScenario() {
     return env;
 }
 
+/** @brief Builds a long-path benchmark with three corner-to-corner agents. */
 Environment makePerfLongPathsScenario() {
     Environment env = emptyEnvironment();
     env.static_obstacles = {
@@ -94,6 +98,7 @@ Environment makePerfLongPathsScenario() {
     return env;
 }
 
+/** @brief Builds a benchmark with multiple predictable dynamic obstacles. */
 Environment makePerfMultiDynamicScenario() {
     Environment env = emptyEnvironment();
     env.static_obstacles = {
@@ -113,6 +118,7 @@ Environment makePerfMultiDynamicScenario() {
     return env;
 }
 
+/** @brief Builds the combined stress benchmark from cluttered + extra traffic. */
 Environment makePerfStressScenario() {
     Environment env = makePerfClutteredScenario();
     env.agents.push_back(makeAgent(2, 2, "agent_c", {7.5, 0.5}, {7.5, 14.5}));

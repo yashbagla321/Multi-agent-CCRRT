@@ -17,6 +17,7 @@ namespace {
 
 using json = nlohmann::json;
 
+/** @brief Parses a JSON [x, y] array into Vec2. */
 Vec2 parseVec2(const json& value) {
     if (!value.is_array() || value.size() < 2) {
         throw std::runtime_error("expected [x, y] array");
@@ -24,6 +25,7 @@ Vec2 parseVec2(const json& value) {
     return {value[0].get<double>(), value[1].get<double>()};
 }
 
+/** @brief Applies optional planner fields from JSON onto an existing config. */
 void parsePlannerConfig(const json& root, PlannerConfig& config) {
     if (!root.is_object()) {
         return;
@@ -88,6 +90,7 @@ void parsePlannerConfig(const json& root, PlannerConfig& config) {
     }
 }
 
+/** @brief Applies optional run settings from JSON onto an existing run settings object. */
 void parseRunSettings(const json& root, RunSettings& run) {
     if (!root.is_object()) {
         return;
@@ -110,6 +113,7 @@ void parseRunSettings(const json& root, RunSettings& run) {
     }
 }
 
+/** @brief Generates evenly spaced waypoints between two points. */
 std::vector<Vec2> generateLineWaypoints(Vec2 from, Vec2 to, double step) {
     std::vector<Vec2> waypoints;
     const double dx = to.x - from.x;
@@ -127,14 +131,17 @@ std::vector<Vec2> generateLineWaypoints(Vec2 from, Vec2 to, double step) {
     return waypoints;
 }
 
+/** @brief Generates vertical path waypoints from a JSON path generator. */
 std::vector<Vec2> generateVerticalPath(double x, double y_start, double y_end, double step) {
     return generateLineWaypoints({x, y_start}, {x, y_end}, step);
 }
 
+/** @brief Generates horizontal path waypoints from a JSON path generator. */
 std::vector<Vec2> generateHorizontalPath(double y, double x_start, double x_end, double step) {
     return generateLineWaypoints({x_start, y}, {x_end, y}, step);
 }
 
+/** @brief Parses a dynamic-obstacle path generator object into waypoints. */
 std::vector<Vec2> parseDynamicPath(const json& path_spec) {
     const std::string type = path_spec.value("type", "");
     if (type == "vertical") {
@@ -160,6 +167,7 @@ std::vector<Vec2> parseDynamicPath(const json& path_spec) {
     throw std::runtime_error("dynamic obstacle path type must be vertical, horizontal, or line");
 }
 
+/** @brief Parses a scenario category string, defaulting to paper scenarios. */
 ScenarioCategory parseScenarioCategory(const json& root) {
     const std::string category = root.value("category", "paper");
     if (category == "performance" || category == "perf") {
@@ -168,6 +176,7 @@ ScenarioCategory parseScenarioCategory(const json& root) {
     return ScenarioCategory::Paper;
 }
 
+/** @brief Parses environment bounds, obstacles, agents, and dynamic obstacles. */
 Environment parseEnvironment(const json& root) {
     Environment env;
 
@@ -233,6 +242,7 @@ Environment parseEnvironment(const json& root) {
     return env;
 }
 
+/** @brief Parses one named scenario entry from JSON. */
 ConfigScenario parseConfigScenario(const std::string& name, const json& root) {
     ConfigScenario scenario;
     scenario.name = name;
@@ -242,6 +252,7 @@ ConfigScenario parseConfigScenario(const std::string& name, const json& root) {
     return scenario;
 }
 
+/** @brief Inserts or replaces a scenario by name. */
 void mergeScenario(std::vector<ConfigScenario>& scenarios, ConfigScenario scenario) {
     for (auto& existing : scenarios) {
         if (existing.name == scenario.name) {
@@ -252,6 +263,7 @@ void mergeScenario(std::vector<ConfigScenario>& scenarios, ConfigScenario scenar
     scenarios.push_back(std::move(scenario));
 }
 
+/** @brief Parses all non-comment scenario entries from a scenarios object. */
 void parseScenariosObject(
     const json& scenarios_object,
     std::vector<ConfigScenario>& out,
@@ -273,11 +285,13 @@ void parseScenariosObject(
     }
 }
 
+/** @brief Resolves a path relative to a config file's containing directory. */
 std::string resolveSiblingPath(const std::string& config_path, const std::string& relative_path) {
     const std::filesystem::path base = std::filesystem::path(config_path).parent_path();
     return (base / relative_path).lexically_normal().string();
 }
 
+/** @brief Returns true when @p path is non-empty and exists on disk. */
 bool fileExists(const std::string& path) {
     return !path.empty() && std::filesystem::exists(path);
 }
@@ -408,6 +422,7 @@ void applyCommandLineOverrides(AppConfig& config, int argc, char* argv[]) {
 
 namespace {
 
+/** @brief Converts internal parsed scenario storage into public registry output. */
 ScenarioEntry toScenarioEntry(const ConfigScenario& scenario) {
     ScenarioEntry entry;
     entry.name = scenario.name;

@@ -56,10 +56,12 @@ std::string escapeJsonString(const std::string& value) {
     return out.str();
 }
 
+/** @brief Writes a Vec2 as a JSON coordinate array. */
 void writePoint(std::ostream& out, const Vec2& point) {
     out << '[' << point.x << ", " << point.y << ']';
 }
 
+/** @brief Writes one trajectory node object, optionally including replay collision risk. */
 void writeTrajectoryNode(
     std::ostream& out,
     const TrajectoryNode& node,
