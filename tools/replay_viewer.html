@@ -1011,7 +1011,7 @@
     function drawTrajectories(view) {
       for (const [agentId, rows] of state.trajectories.entries()) {
         const color = palette[agentId % palette.length];
-        const visible = visibleRows(rows);
+        const visible = visibleRows(rows, agentId);
         drawPolyline(view, visible, color, 3);
 
         if ($("showReplans").checked) {
@@ -1111,16 +1111,53 @@
       ctx.restore();
     }
 
-    function visibleRows(rows) {
+    function visibleRows(rows, agentId) {
       const mode = $("trailMode").value;
+      let visible;
       if (mode === "full") {
-        return rows;
+        visible = rows;
+      } else if (mode === "past") {
+        visible = rows.filter((row) => row.timestep <= state.currentTime);
+      } else {
+        const windowSize = Math.max(1, Number($("trailWindow").value || 24));
+        visible = rows.filter((row) => row.timestep <= state.currentTime && row.timestep >= state.currentTime - windowSize);
       }
-      if (mode === "past") {
-        return rows.filter((row) => row.timestep <= state.currentTime);
+      return appendGoalConnector(visible, rows, agentId);
+    }
+
+    function appendGoalConnector(visible, allRows, agentId) {
+      if (!state.summary || state.summary.success !== true || visible.length === 0 || allRows.length === 0) {
+        return visible;
       }
-      const windowSize = Math.max(1, Number($("trailWindow").value || 24));
-      return rows.filter((row) => row.timestep <= state.currentTime && row.timestep >= state.currentTime - windowSize);
+      const lastRow = allRows[allRows.length - 1];
+      const visibleLast = visible[visible.length - 1];
+      if (visibleLast.timestep !== lastRow.timestep) {
+        return visible;
+      }
+      const goal = goalForAgent(agentId);
+      if (!goal || pointsClose(visibleLast, goal)) {
+        return visible;
+      }
+      return [...visible, {
+        x: goal.x,
+        y: goal.y,
+        variance: visibleLast.variance,
+        timestep: visibleLast.timestep,
+        goalConnector: true
+      }];
+    }
+
+    function goalForAgent(agentId) {
+      const env = scenarioEnvironment();
+      if (!env || !Array.isArray(env.agents)) {
+        return null;
+      }
+      const agent = env.agents.find((candidate) => Number(candidate.id) === Number(agentId));
+      return agent ? toPoint(agent.goal) : null;
+    }
+
+    function pointsClose(a, b) {
+      return Boolean(a && b && Math.hypot(Number(a.x) - Number(b.x), Number(a.y) - Number(b.y)) <= 1e-6);
     }
 
     function rowAtTime(rows, time) {

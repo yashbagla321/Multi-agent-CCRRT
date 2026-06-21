@@ -21,6 +21,7 @@ TEST(MultiAgentPlanner, SingleAgentReachesGoal) {
     EXPECT_GE(result.elapsed_ms, 0.0);
     ASSERT_EQ(result.agent_paths.size(), 1u);
     EXPECT_FALSE(result.agent_paths[0].empty());
+    EXPECT_LE(result.agent_paths[0].back().position.distance(env.agents[0].goal), config.expand_distance);
 }
 
 TEST(MultiAgentPlanner, TwoAgentsBothReachGoals) {

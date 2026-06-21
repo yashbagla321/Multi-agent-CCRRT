@@ -44,20 +44,20 @@ Unit tests are enabled by default with `CCRRT_BUILD_TESTS=ON`.
 
 ## Run
 
-A config file is required at startup. The executable auto-discovers `config/ccrrt.json` copied next to the executable, or you can pass one explicitly.
+A config file is required at startup. For edit-and-run work, pass the source config so changes in `cpp/config/scenarios.json` are read immediately. The executable can also auto-discover the copied build config next to the executable, but that copy is refreshed by the build step.
 
 ```powershell
-cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\ccrrt.json --scenario figure5
-cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\ccrrt.json --scenario figure6
-cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\ccrrt.json --help
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --scenario figure5
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --scenario figure6
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --help
 ```
 
-Linux:
+Linux/macOS, from the repository root:
 
 ```bash
-./build/multi_agent_ccrrt --scenario figure5
-./build/multi_agent_ccrrt --scenario figure6
-./build/multi_agent_ccrrt --help
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --scenario figure5
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --scenario figure6
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --help
 ```
 
 Useful flags:
@@ -93,7 +93,7 @@ The replay viewer loads those files from the folder automatically and shows exec
 
 ## Runtime Configuration
 
-Edit `cpp/config/ccrrt.json` for planner/run settings and `cpp/config/scenarios.json` for geometry. Re-run the executable after changing JSON; no rebuild is required.
+Edit `cpp/config/ccrrt.json` for planner/run settings and `cpp/config/scenarios.json` for geometry. Re-run with `--config cpp\config\ccrrt.json` on Windows or `--config cpp/config/ccrrt.json` on Linux/macOS after changing JSON; no rebuild is required.
 
 For detailed config docs, see [CONFIG.md](CONFIG.md).
 

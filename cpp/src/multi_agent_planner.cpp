@@ -476,14 +476,6 @@ SimulationResult MultiAgentPlanner::run(
                 ++result.replan_count;
             }
 
-            ExecutedStep step;
-            step.agent_id = agent.spec.id;
-            step.timestep = timestep;
-            step.position = agent.state.mean;
-            step.variance = agent.state.variance;
-            step.replanned = adopt_replan && !replanned.empty();
-            agent.executed.push_back(step);
-
             const Vec2 target = agent.planned.nodes[1].position;
             const double step_size = effectiveMotionStep(config_);
             const Vec2 next_position = advanceToward(agent.state.mean, target, step_size);
@@ -494,6 +486,14 @@ SimulationResult MultiAgentPlanner::run(
             const Vec2 measurement = kalman_.simulateMeasurement(next_position, rng_);
             agent.state = kalman_.measurementUpdate(agent.state, measurement);
             agent.state.mean = next_position;
+
+            ExecutedStep step;
+            step.agent_id = agent.spec.id;
+            step.timestep = timestep;
+            step.position = agent.state.mean;
+            step.variance = agent.state.variance;
+            step.replanned = adopt_replan && !replanned.empty();
+            agent.executed.push_back(step);
 
             if (!agent.planned.empty()) {
                 agent.planned.nodes.front().position = agent.state.mean;

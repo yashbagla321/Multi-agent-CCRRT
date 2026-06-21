@@ -14,21 +14,34 @@ Parameter descriptions are inline in the config files (`"_field_name": "..."` im
 
 ## Quick start
 
+Windows, from the repository root after building with the README commands:
+
 ```powershell
-# From the repository root after building with the README commands:
-cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\ccrrt.json
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json
 
 # Edit obstacle positions in config/scenarios.json, then re-run:
 #   "static_obstacles": [{ "center": [7.0, 4.0], "radius": 2.0 }, ...]
 
 # Python-compat preset
-cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\python_compat.json
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\python_compat.json
 
 # CLI overrides config
-cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\ccrrt.json --scenario figure6 --seed 7 --mc-samples 100
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --scenario figure6 --seed 7 --mc-samples 100
 ```
 
-After build, configs are copied next to the executable in `cpp/build/config/` (and `cpp/build/ccrrt.json` for auto-discovery).
+Linux/macOS, from the repository root:
+
+```bash
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json
+
+# Python-compat preset
+./cpp/build/multi_agent_ccrrt --config cpp/config/python_compat.json
+
+# CLI overrides config
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --scenario figure6 --seed 7 --mc-samples 100
+```
+
+After build, configs are copied next to the executable in `cpp/build/config/` (and `cpp/build/ccrrt.json` for auto-discovery). Those copied files are snapshots; use `--config cpp\config\ccrrt.json` on Windows or `--config cpp/config/ccrrt.json` on Linux/macOS when you want source JSON edits to reflect immediately without rebuilding.
 
 ## Replay output
 
