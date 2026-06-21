@@ -17,6 +17,8 @@
 - Added browser replay via `tools/replay_viewer.html`.
 - Added `scenario.json` export so each replay folder is self-contained.
 - Added `replay_frames.json` export for active receding-horizon plans, future covariance, and collision risk over time.
+- Added replay panels for per-agent current/next collision probability and run summary metrics.
+- Added right-side replay information rail so Agents and Summary stay visible without covering the map.
 - Replay folders now contain `trajectories.csv`, `summary.json`, `scenario.json`, and `replay_frames.json`.
 
 ### Planner and collision checking

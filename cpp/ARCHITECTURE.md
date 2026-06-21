@@ -72,7 +72,7 @@ flowchart LR
 2. `ScenarioRegistry` selects a named scenario.
 3. `MultiAgentPlanner::run(environment, name)` executes priority planning and receding-horizon replanning while optional observers receive per-timestep frames.
 4. `TrajectoryExporter` writes `trajectories.csv`, `summary.json`, `scenario.json`, and `replay_frames.json`.
-5. `tools/replay_viewer.html` loads the output folder in a browser and visualizes the run.
+5. `tools/replay_viewer.html` loads the output folder in a browser and visualizes the run with the canvas, per-agent panel, and summary panel.
 
 ## Core Data Types
 

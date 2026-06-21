@@ -15,22 +15,33 @@ Parameter descriptions are inline in the config files (`"_field_name": "..."` im
 ## Quick start
 
 ```powershell
-cd cpp
-
-# Requires config/ccrrt.json (loads config/scenarios.json automatically)
-./build/Release/multi_agent_ccrrt.exe
+# From the repository root after building with the README commands:
+cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\ccrrt.json
 
 # Edit obstacle positions in config/scenarios.json, then re-run:
 #   "static_obstacles": [{ "center": [7.0, 4.0], "radius": 2.0 }, ...]
 
 # Python-compat preset
-./build/Release/multi_agent_ccrrt.exe --config config/python_compat.json
+cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\python_compat.json
 
 # CLI overrides config
-./build/Release/multi_agent_ccrrt.exe --scenario figure6 --seed 7 --mc-samples 100
+cpp\build\multi_agent_ccrrt.exe --config cpp\build\config\ccrrt.json --scenario figure6 --seed 7 --mc-samples 100
 ```
 
-After build, configs are copied to `build/Release/config/` (and `build/Release/ccrrt.json`).
+After build, configs are copied next to the executable in `cpp/build/config/` (and `cpp/build/ccrrt.json` for auto-discovery).
+
+## Replay output
+
+Normal scenario runs write a self-contained replay folder, usually `output/<scenario>`:
+
+| File | Purpose |
+|------|---------|
+| `trajectories.csv` | Executed agent positions, variance, and replan markers |
+| `summary.json` | Success flag, elapsed time, step counts, and total replans |
+| `scenario.json` | Bounds, static obstacles, dynamic obstacles, starts, and goals |
+| `replay_frames.json` | Per-timestep active plans, future covariance, and current/next/max collision probabilities |
+
+Open `tools/replay_viewer.html` in Chrome or Edge and select the output folder to view the run.
 
 ## Precedence
 
