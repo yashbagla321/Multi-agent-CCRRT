@@ -2,7 +2,7 @@
   "scenario": "figure7",
   "success": true,
   "replan_count": 60,
-  "elapsed_ms": 57058.7090,
+  "elapsed_ms": 41746.3550,
   "total_steps": 362,
   "max_timestep": 214,
   "agents": [

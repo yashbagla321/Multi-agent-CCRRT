@@ -1,0 +1,22 @@
+{
+  "scenario": "perf_stress",
+  "success": true,
+  "replan_count": 69,
+  "elapsed_ms": 378245.2140,
+  "total_steps": 585,
+  "max_timestep": 206,
+  "agents": [
+    {
+      "agent_index": 0,
+      "steps": 177
+    },
+    {
+      "agent_index": 1,
+      "steps": 207
+    },
+    {
+      "agent_index": 2,
+      "steps": 201
+    }
+  ]
+}

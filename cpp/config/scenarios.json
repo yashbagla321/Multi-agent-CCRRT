@@ -113,7 +113,7 @@
       {
         "id": 0,
         "initial_variance": 0.1,
-        "path": { "type": "vertical", "x": 10.5, "y_start": 0.5, "y_end": 14.5, "step": 1.0 }
+        "path": { "type": "vertical", "x": 10.5, "y_start": 0.5, "y_end": 14.5, "step": 0.2 }
       }
     ]
   },
@@ -137,7 +137,7 @@
       {
         "id": 0,
         "initial_variance": 0.1,
-        "path": { "type": "horizontal", "y": 7.0, "x_start": 1.0, "x_end": 14.0, "step": 1.0 }
+        "path": { "type": "horizontal", "y": 7.0, "x_start": 1.0, "x_end": 14.0, "step": 0.2 }
       }
     ]
   },

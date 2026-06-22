@@ -1,0 +1,18 @@
+{
+  "scenario": "perf_narrow_passage",
+  "success": true,
+  "replan_count": 36,
+  "elapsed_ms": 34724.6960,
+  "total_steps": 313,
+  "max_timestep": 170,
+  "agents": [
+    {
+      "agent_index": 0,
+      "steps": 171
+    },
+    {
+      "agent_index": 1,
+      "steps": 142
+    }
+  ]
+}

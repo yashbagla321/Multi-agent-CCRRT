@@ -1,0 +1,22 @@
+{
+  "scenario": "perf_long_paths",
+  "success": true,
+  "replan_count": 36,
+  "elapsed_ms": 77075.7740,
+  "total_steps": 442,
+  "max_timestep": 151,
+  "agents": [
+    {
+      "agent_index": 0,
+      "steps": 141
+    },
+    {
+      "agent_index": 1,
+      "steps": 152
+    },
+    {
+      "agent_index": 2,
+      "steps": 149
+    }
+  ]
+}

@@ -1,18 +1,18 @@
 {
   "scenario": "figure5",
   "success": true,
-  "replan_count": 32,
-  "elapsed_ms": 23057.1460,
-  "total_steps": 215,
-  "max_timestep": 119,
+  "replan_count": 27,
+  "elapsed_ms": 23921.0460,
+  "total_steps": 197,
+  "max_timestep": 103,
   "agents": [
     {
       "agent_index": 0,
-      "steps": 95
+      "steps": 93
     },
     {
       "agent_index": 1,
-      "steps": 120
+      "steps": 104
     }
   ]
 }

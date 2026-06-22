@@ -1,0 +1,26 @@
+{
+  "scenario": "perf_four_agents",
+  "success": true,
+  "replan_count": 49,
+  "elapsed_ms": 115466.4420,
+  "total_steps": 554,
+  "max_timestep": 146,
+  "agents": [
+    {
+      "agent_index": 0,
+      "steps": 147
+    },
+    {
+      "agent_index": 1,
+      "steps": 146
+    },
+    {
+      "agent_index": 2,
+      "steps": 134
+    },
+    {
+      "agent_index": 3,
+      "steps": 127
+    }
+  ]
+}

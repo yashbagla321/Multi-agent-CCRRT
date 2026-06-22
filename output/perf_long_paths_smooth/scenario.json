@@ -1,0 +1,17 @@
+{
+  "name": "perf_long_paths",
+  "description": "3 agents, long corner-to-corner paths; tests horizon length",
+  "bounds": { "min": -2.0000, "max": 17.0000 },
+  "static_obstacles": [
+    { "center": [7.0000, 5.0000], "radius": 1.8000 },
+    { "center": [9.0000, 9.0000], "radius": 1.8000 },
+    { "center": [5.0000, 11.0000], "radius": 1.5000 }
+  ],
+  "agents": [
+    { "id": 0, "priority": 0, "name": "red", "start": [0.0000, 0.0000], "goal": [15.0000, 15.0000] },
+    { "id": 1, "priority": 1, "name": "blue", "start": [15.0000, 0.0000], "goal": [0.0000, 15.0000] },
+    { "id": 2, "priority": 2, "name": "green", "start": [0.0000, 15.0000], "goal": [15.0000, 0.0000] }
+  ],
+  "dynamic_obstacles": [
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "scenario": "perf_multi_dynamic",
+  "success": true,
+  "replan_count": 27,
+  "elapsed_ms": 39925.2750,
+  "total_steps": 305,
+  "max_timestep": 164,
+  "agents": [
+    {
+      "agent_index": 0,
+      "steps": 140
+    },
+    {
+      "agent_index": 1,
+      "steps": 165
+    }
+  ]
+}
