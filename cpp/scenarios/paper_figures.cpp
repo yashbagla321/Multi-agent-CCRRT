@@ -81,7 +81,7 @@ Environment makeFigure5Scenario() {
 Environment makeFigure6Scenario() {
     Environment env = baseEnvironment();
     env.agents = {
-        makeAgent(0, 0, "green", {1.0, 14.0}, {14.0, 14.0}),
+        makeAgent(0, 0, "red", {1.0, 14.0}, {14.0, 14.0}),
         makeAgent(1, 1, "blue", {14.0, 1.0}, {1.0, 1.0}),
     };
     // Fig. 6 tests priority-based agent crossing only (no dynamic obstacle).
@@ -92,7 +92,7 @@ Environment makeFigure7Scenario() {
     Environment env = baseEnvironment();
     env.static_obstacles.push_back({{8.0, 7.0}, 1.5});
     env.agents = {
-        makeAgent(0, 0, "green", {1.0, 1.0}, {15.0, 15.0}),
+        makeAgent(0, 0, "red", {1.0, 1.0}, {15.0, 15.0}),
         makeAgent(1, 1, "blue", {15.0, 2.0}, {2.0, 15.0}),
     };
 

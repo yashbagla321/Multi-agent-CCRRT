@@ -6,7 +6,7 @@
     "_scenario": "Scenario name from scenarios.json or inline scenarios block. Default: figure5",
     "scenario": "figure5",
 
-    "_output_directory": "CSV/JSON output folder. Empty string uses output/<scenario>.",
+    "_output_directory": "CSV/JSON output folder/root. Empty uses output/<scenario> or output/<scenario>_smooth.",
     "output_directory": "",
 
     "_list_scenarios": "Print scenario list and exit. CLI: --list-scenarios",
@@ -14,6 +14,15 @@
 
     "_benchmark_all": "Run all performance scenarios and write benchmark.csv. CLI: --benchmark-all",
     "benchmark_all": false,
+
+    "_run_all": "Run every scenario twice: normal and smoothed. CLI: --run-all",
+    "run_all": false,
+
+    "_run_all_normal": "Run every scenario with smoothing disabled. CLI: --run-all-normal",
+    "run_all_normal": false,
+
+    "_run_all_smooth": "Run every scenario with smoothing enabled. CLI: --run-all-smooth",
+    "run_all_smooth": false,
 
     "_python_compat": "Use Multiagent CCRRT.py planner settings. CLI: --python-compat",
     "python_compat": false
@@ -26,8 +35,8 @@
     "_motion_step": "Distance traveled per simulation timestep. Smaller = smoother paths (default: 0.2). Set 0 to use expand_distance.",
     "motion_step": 0.2,
 
-    "_enable_path_smoothing": "Shortcut-smoothing of RRT paths before execution. Default: false. CLI: --path-smoothing to enable for one run",
-    "enable_path_smoothing": false,
+    "_enable_path_smoothing": "Shortcut-smoothing of RRT path geometry before execution. Keeps discrete future timesteps for chance checks. CLI: --path-smoothing / --no-path-smoothing",
+    "enable_path_smoothing": true,
 
     "_collision_bound_M": "Max collision probability per step (chance constraint M). Default: 0.2",
     "collision_bound_M": 0.2,

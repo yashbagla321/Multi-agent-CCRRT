@@ -485,13 +485,16 @@ SimulationResult MultiAgentPlanner::run(
             const Vec2 target = agent.planned.nodes[1].position;
             const double step_size = effectiveMotionStep(config_);
             const Vec2 next_position = advanceToward(agent.state.mean, target, step_size);
+            const bool reached_goal =
+                next_position.distance(agent.spec.goal) <= config_.expand_distance;
+            const Vec2 executed_position = reached_goal ? agent.spec.goal : next_position;
             const bool reached_waypoint =
                 next_position.distance(target) <= 1e-9 ||
                 agent.state.mean.distance(target) <= step_size;
 
-            const Vec2 measurement = kalman_.simulateMeasurement(next_position, rng_);
+            const Vec2 measurement = kalman_.simulateMeasurement(executed_position, rng_);
             agent.state = kalman_.measurementUpdate(agent.state, measurement);
-            agent.state.mean = next_position;
+            agent.state.mean = executed_position;
 
             ExecutedStep step;
             step.agent_id = agent.spec.id;
@@ -510,7 +513,7 @@ SimulationResult MultiAgentPlanner::run(
                 shiftTrajectory(agent.planned);
             }
 
-            if (agent.state.mean.distance(agent.spec.goal) <= config_.expand_distance) {
+            if (reached_goal) {
                 agent.at_goal = true;
             }
         }

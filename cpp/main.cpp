@@ -38,11 +38,15 @@ void printUsage() {
               << "\nOptions:\n"
               << "  --scenario <name>  Scenario to run (overrides config)\n"
               << "  --list-scenarios   Print available scenarios and descriptions\n"
+              << "  --run-all          Run every scenario twice: normal and smoothed\n"
+              << "  --run-all-normal   Run every scenario with smoothing disabled\n"
+              << "  --run-all-smooth   Run every scenario with smoothing enabled\n"
               << "  --benchmark-all    Run all performance scenarios; write benchmark.csv\n"
-              << "  --output <dir>     Output directory (default: output/<scenario>)\n"
+              << "  --output <dir>     Output directory/root (default: output/<scenario>)\n"
               << "  --seed <n>         RNG seed (default: 42)\n"
               << "  --mc-samples <n>   Monte Carlo samples (default: 1000)\n"
               << "  --path-smoothing   Enable RRT shortcut path smoothing\n"
+              << "  --no-path-smoothing Disable RRT shortcut path smoothing\n"
               << "  --python-compat    Use Multiagent CCRRT.py planner settings\n"
               << "\nVisualization:\n"
               << "  Run output is written as CSV/JSON. Open tools/replay_viewer.html and\n"
@@ -99,11 +103,22 @@ ccrrt::AppConfig loadConfiguration(int argc, char* argv[]) {
     return app;
 }
 
+/** @brief Default replay output directory for a scenario and smoothing mode. */
+std::string scenarioOutputDirectory(const std::string& scenario_name, bool smoothing_enabled) {
+    return "output/" + scenario_name + (smoothing_enabled ? "_smooth" : "");
+}
+
+/** @brief Default benchmark output directory for a smoothing mode. */
+std::string benchmarkOutputDirectory(bool smoothing_enabled) {
+    return std::string("output/benchmark") + (smoothing_enabled ? "_smooth" : "");
+}
+
 /** @brief Runs one selected scenario and writes all replay artifacts. */
 int runSingleScenario(
     const ccrrt::ScenarioEntry& scenario,
     ccrrt::PlannerConfig config,
-    const std::string& output_directory) {
+    const std::string& output_directory,
+    ccrrt::SimulationResult* result_out = nullptr) {
     std::cout << "Running scenario: " << scenario.name << '\n';
     if (!scenario.description.empty()) {
         std::cout << "  " << scenario.description << '\n';
@@ -130,6 +145,10 @@ int runSingleScenario(
     }
     if (!exporter.exportReplayFramesJson(replay_collector.frames, output_directory)) {
         return 1;
+    }
+
+    if (result_out != nullptr) {
+        *result_out = result;
     }
 
     printResultSummary(result);
@@ -191,6 +210,64 @@ int runBenchmarkAll(
     return 0;
 }
 
+/** @brief Runs all scenarios in normal and smoothed modes with separate output folders. */
+int runAllScenarios(
+    const ccrrt::ScenarioRegistry& registry,
+    ccrrt::PlannerConfig config,
+    const std::string& output_root,
+    const std::vector<bool>& smoothing_modes) {
+    const auto scenarios = registry.all();
+    const std::string root_prefix = output_root.empty() ? "output" : output_root;
+    ccrrt::TrajectoryExporter exporter;
+    std::vector<ccrrt::SimulationResult> benchmark_normal;
+    std::vector<ccrrt::SimulationResult> benchmark_smooth;
+    int status = 0;
+
+    for (const bool smoothing_enabled : smoothing_modes) {
+        ccrrt::PlannerConfig mode_config = config;
+        mode_config.enable_path_smoothing = smoothing_enabled;
+        std::cout << "\nRunning all scenarios ("
+                  << (smoothing_enabled ? "smoothed" : "normal")
+                  << ")\n";
+
+        for (const auto& scenario : scenarios) {
+            const std::string suffix = smoothing_enabled ? "_smooth" : "";
+            const std::string output_directory = root_prefix + "/" + scenario.name + suffix;
+            ccrrt::SimulationResult result;
+            const int result_code =
+                runSingleScenario(scenario, mode_config, output_directory, &result);
+            if (result_code != 0 && status == 0) {
+                status = result_code;
+            }
+
+            if (scenario.category == ccrrt::ScenarioCategory::Performance) {
+                if (smoothing_enabled) {
+                    benchmark_smooth.push_back(result);
+                } else {
+                    benchmark_normal.push_back(result);
+                }
+            }
+        }
+    }
+
+    if (!benchmark_normal.empty()) {
+        const std::string benchmark_dir = root_prefix + "/benchmark";
+        if (!exporter.exportBenchmarkCsv(benchmark_normal, benchmark_dir) && status == 0) {
+            status = 1;
+        }
+        std::cout << "Benchmark summary: " << benchmark_dir << "/benchmark.csv\n";
+    }
+    if (!benchmark_smooth.empty()) {
+        const std::string benchmark_dir = root_prefix + "/benchmark_smooth";
+        if (!exporter.exportBenchmarkCsv(benchmark_smooth, benchmark_dir) && status == 0) {
+            status = 1;
+        }
+        std::cout << "Benchmark summary: " << benchmark_dir << "/benchmark.csv\n";
+    }
+
+    return status;
+}
+
 /** @brief Returns true when the argv list contains --help or -h. */
 bool hasHelpFlag(int argc, char* argv[]) {
     for (int i = 1; i < argc; ++i) {
@@ -223,10 +300,21 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    if (app.run.run_all || app.run.run_all_normal || app.run.run_all_smooth) {
+        std::vector<bool> smoothing_modes;
+        if (app.run.run_all || app.run.run_all_normal) {
+            smoothing_modes.push_back(false);
+        }
+        if (app.run.run_all || app.run.run_all_smooth) {
+            smoothing_modes.push_back(true);
+        }
+        return runAllScenarios(registry, app.planner, app.run.output_directory, smoothing_modes);
+    }
+
     if (app.run.benchmark_all) {
         std::string output_directory = app.run.output_directory;
         if (output_directory.empty()) {
-            output_directory = "output/benchmark";
+            output_directory = benchmarkOutputDirectory(app.planner.enable_path_smoothing);
         }
         return runBenchmarkAll(registry, app.planner, output_directory);
     }
@@ -240,7 +328,8 @@ int main(int argc, char* argv[]) {
 
     std::string output_directory = app.run.output_directory;
     if (output_directory.empty()) {
-        output_directory = "output/" + app.run.scenario;
+        output_directory =
+            scenarioOutputDirectory(app.run.scenario, app.planner.enable_path_smoothing);
     }
 
     if (app.run.python_compat) {

@@ -395,7 +395,7 @@
 
         <div class="info-panel" aria-live="polite">
           <section class="info-card">
-            <div class="info-title">Agents</div>
+            <div class="info-title">Agents (Priority Order)</div>
             <div id="agentPanel" class="agent-list"></div>
           </section>
           <section class="info-card">
@@ -846,6 +846,31 @@
       return state.scenario.environment || state.scenario;
     }
 
+    function priorityOrderedAgents() {
+      const env = scenarioEnvironment();
+      const agents = env && Array.isArray(env.agents) ? env.agents.slice() : [];
+      return agents.sort((a, b) => {
+        const priorityDelta = Number(a.priority || 0) - Number(b.priority || 0);
+        if (priorityDelta !== 0) {
+          return priorityDelta;
+        }
+        return Number(a.id || 0) - Number(b.id || 0);
+      });
+    }
+
+    function priorityIndexForAgentId(agentId) {
+      const ordered = priorityOrderedAgents();
+      const index = ordered.findIndex((agent) => Number(agent.id) === Number(agentId));
+      if (index >= 0) {
+        return index;
+      }
+      return Math.abs(Number.isFinite(Number(agentId)) ? Number(agentId) : 0);
+    }
+
+    function colorForAgentId(agentId) {
+      return palette[priorityIndexForAgentId(agentId) % palette.length];
+    }
+
     function toPoint(value) {
       if (Array.isArray(value) && value.length >= 2) {
         return { x: Number(value[0]), y: Number(value[1]) };
@@ -1000,8 +1025,8 @@
           drawPoint(view, current.point, "#b64ac8", 6, false);
         }
       }
-      for (const [index, agent] of (env.agents || []).entries()) {
-        const color = palette[index % palette.length];
+      for (const agent of priorityOrderedAgents()) {
+        const color = colorForAgentId(agent.id);
         drawPoint(view, toPoint(agent.start), color, 7, true);
         drawRing(view, toPoint(agent.goal), color, 8);
       }
@@ -1010,7 +1035,7 @@
 
     function drawTrajectories(view) {
       for (const [agentId, rows] of state.trajectories.entries()) {
-        const color = palette[agentId % palette.length];
+        const color = colorForAgentId(agentId);
         const visible = visibleRows(rows, agentId);
         drawPolyline(view, visible, color, 3);
 
@@ -1038,7 +1063,7 @@
 
       for (const agent of frame.agents || []) {
         const agentId = Number(agent.id);
-        const color = palette[Math.abs(agentId) % palette.length];
+        const color = colorForAgentId(agentId);
         const nodes = (agent.planned || []).map((node) => ({
           x: Number(node.x),
           y: Number(node.y),
@@ -1344,17 +1369,22 @@
       panel.innerHTML = "";
       const frame = frameAtTime(state.currentTime);
       const agents = frame && Array.isArray(frame.agents)
-        ? frame.agents
+        ? frame.agents.slice().sort((a, b) => {
+            const priorityDelta = Number(a.priority || 0) - Number(b.priority || 0);
+            if (priorityDelta !== 0) {
+              return priorityDelta;
+            }
+            return Number(a.id || 0) - Number(b.id || 0);
+          })
         : Array.from(state.trajectories.keys()).map((agentId) => ({ id: agentId }));
 
-      for (const agent of agents) {
+      for (const [orderIndex, agent] of agents.entries()) {
         const agentId = Number(agent.id);
         const planned = Array.isArray(agent.planned) ? agent.planned : [];
         const currentRisk = Number(planned[0] && planned[0].collision_probability);
         const nextRisk = Number(planned[1] && planned[1].collision_probability);
-        const colorIndex = Math.abs(Number.isFinite(agentId) ? agentId : 0) % palette.length;
-        const color = palette[colorIndex];
-        const label = agent.name || `Agent ${Number.isFinite(agentId) ? agentId : "-"}`;
+        const color = colorForAgentId(agentId);
+        const label = `${orderIndex + 1}. ${agent.name || `Agent ${Number.isFinite(agentId) ? agentId : "-"}`}`;
         const badgeClass = agent.at_goal ? "goal" : (agent.replanned_this_step ? "replan" : "");
         const badgeText = agent.at_goal ? "goal" : (agent.replanned_this_step ? "replan" : "active");
         const item = document.createElement("div");

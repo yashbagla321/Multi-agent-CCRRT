@@ -85,7 +85,6 @@ Trajectory CCRRTPlanner::extractPath(
 
 Trajectory CCRRTPlanner::shortcutSmooth(
     const Trajectory& path,
-    const Vec2& goal,
     const std::vector<StaticObstacle>& static_obstacles,
     const std::vector<TrajectoryPrediction>& agent_predictions,
     const std::vector<TrajectoryPrediction>& dynamic_predictions,
@@ -95,6 +94,7 @@ Trajectory CCRRTPlanner::shortcutSmooth(
     }
 
     Trajectory smoothed;
+    smoothed.total_cost = path.total_cost;
     smoothed.nodes.push_back(path.nodes.front());
     std::size_t anchor = 0;
 
@@ -124,17 +124,18 @@ Trajectory CCRRTPlanner::shortcutSmooth(
             }
         }
 
-        TrajectoryNode node = path.nodes[best];
-        node.time_step = static_cast<int>(best);
-        smoothed.nodes.push_back(node);
+        const TrajectoryNode start_node = smoothed.nodes.back();
+        const TrajectoryNode end_node = path.nodes[best];
+        const std::size_t span = best - anchor;
+        for (std::size_t step = 1; step <= span; ++step) {
+            const double alpha = static_cast<double>(step) / static_cast<double>(span);
+            TrajectoryNode node;
+            node.position = start_node.position + (end_node.position - start_node.position) * alpha;
+            node.variance = path.nodes[anchor + step].variance;
+            node.time_step = static_cast<int>(smoothed.nodes.size());
+            smoothed.nodes.push_back(node);
+        }
         anchor = best;
-    }
-
-    if (smoothed.nodes.back().position.distance(goal) > 1e-6 &&
-        path.nodes.back().position.distance(goal) <= 1e-6) {
-        TrajectoryNode goal_node = path.nodes.back();
-        goal_node.time_step = static_cast<int>(path.nodes.size() - 1);
-        smoothed.nodes.push_back(goal_node);
     }
 
     return smoothed;
@@ -247,7 +248,12 @@ Trajectory CCRRTPlanner::plan(
         }
     }
 
-    return best_path;
+    return shortcutSmooth(
+        best_path,
+        static_obstacles,
+        agent_predictions,
+        dynamic_predictions,
+        time_offset);
 }
 
 }  // namespace ccrrt

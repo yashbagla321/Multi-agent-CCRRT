@@ -91,15 +91,15 @@ See `config/ccrrt.json` for per-field descriptions.
 
 ### Path smoothing (`planner.enable_path_smoothing`)
 
-Optional **greedy shortcut smoothing** runs after each RRT plan: collinear waypoints are removed when a direct edge is still chance-constraint safe. This reduces zigzags in the planned path (separate from `motion_step`, which controls how finely the robot moves along each edge during execution).
+Optional **greedy shortcut smoothing** runs after each RRT plan. It replaces zig-zag geometry with straight shortcut spans only when the full span is still chance-constraint safe against static obstacles, higher-priority broadcasts, and dynamic obstacles. The returned trajectory still keeps one node per discrete future timestep, so prediction timing and collision-probability visualization remain aligned with the theory.
 
 | Enable | How |
 |--------|-----|
 | Config | `"enable_path_smoothing": true` in `config/ccrrt.json` |
 | CLI | `--path-smoothing` |
-| Disable | `"enable_path_smoothing": false` in `config/ccrrt.json` (default) |
+| Disable | `"enable_path_smoothing": false` in `config/ccrrt.json` or `--no-path-smoothing` |
 
-Default: **off** (`false`). Re-run after changing — no rebuild needed.
+The C++ library default is off; the project config can turn it on or off. Re-run after changing the JSON; no rebuild needed.
 
 ---
 
@@ -109,6 +109,21 @@ All built-in scenarios are defined here:
 
 - **Paper:** `figure5`, `figure6`, `figure7`, `python_reference`
 - **Performance:** `perf_cluttered`, `perf_four_agents`, `perf_narrow_passage`, `perf_long_paths`, `perf_multi_dynamic`, `perf_stress`
+
+| Scenario | Category | Purpose |
+|----------|----------|---------|
+| `figure5` | paper | Paper Fig. 5: two agents, four static obstacles, one dynamic obstacle |
+| `figure6` | paper | Priority and time-separated crossing |
+| `figure7` | paper | Zig-zag / waiting behavior around a dynamic obstacle |
+| `python_reference` | paper | Geometry aligned with `Multiagent CCRRT.py` |
+| `perf_cluttered` | performance | Dense static-obstacle Monte Carlo workload |
+| `perf_four_agents` | performance | Four-agent priority-chain planning |
+| `perf_narrow_passage` | performance | Tight-corridor replanning |
+| `perf_long_paths` | performance | Long-horizon multi-agent paths |
+| `perf_multi_dynamic` | performance | Multiple dynamic-obstacle predictions |
+| `perf_stress` | performance | Combined clutter, agents, and dynamic obstacles |
+
+Agent labels should follow visualization priority/color order inside each scenario: `red`, `blue`, `green`, `orange`, then the remaining palette colors as needed. Lower `priority` values plan first and appear first in the replay side panel.
 
 ### Scenario schema
 
@@ -209,7 +224,7 @@ All built-in scenarios are defined here:
   "bounds": { "min": -2, "max": 17 },
   "static_obstacles": [],
   "agents": [
-    { "id": 0, "priority": 0, "name": "a", "start": [0, 0], "goal": [10, 10] }
+    { "id": 0, "priority": 0, "name": "red", "start": [0, 0], "goal": [10, 10] }
   ]
 }
 ```
@@ -242,8 +257,93 @@ Inline `scenarios` entries replace the same-named entry from `scenarios_file`.
 | `--scenario <name>` | `run.scenario` |
 | `--output <dir>` | `run.output_directory` |
 | `--list-scenarios` | `run.list_scenarios = true` |
+| `--run-all` | `run.run_all = true` |
+| `--run-all-normal` | `run.run_all_normal = true` |
+| `--run-all-smooth` | `run.run_all_smooth = true` |
 | `--benchmark-all` | `run.benchmark_all = true` |
 | `--seed <n>` | `planner.rng_seed` |
 | `--mc-samples <n>` | `planner.mc_samples` |
 | `--path-smoothing` | `planner.enable_path_smoothing = true` |
+| `--no-path-smoothing` | `planner.enable_path_smoothing = false` |
 | `--python-compat` | `run.python_compat = true` (+ planner preset) |
+
+## Running scenarios and benchmarks
+
+List every scenario loaded from `config/scenarios.json`:
+
+```powershell
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --list-scenarios
+```
+
+```bash
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --list-scenarios
+```
+
+Run one scenario and write a replay folder:
+
+```powershell
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --scenario figure5 --output output\figure5
+```
+
+```bash
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --scenario figure5 --output output/figure5
+```
+
+Run every paper and performance scenario in both normal and smoothed modes:
+
+```powershell
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --run-all
+```
+
+```bash
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --run-all
+```
+
+Default `--run-all` outputs:
+
+| Mode | Replay folders | Benchmark summary |
+|------|----------------|-------------------|
+| Normal | `output/<scenario>` | `output/benchmark/benchmark.csv` |
+| Smoothed | `output/<scenario>_smooth` | `output/benchmark_smooth/benchmark.csv` |
+
+Run only the normal algorithm sweep:
+
+```powershell
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --run-all-normal
+```
+
+```bash
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --run-all-normal
+```
+
+Run only the smoothed algorithm sweep:
+
+```powershell
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --run-all-smooth
+```
+
+```bash
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --run-all-smooth
+```
+
+For a single scenario with no explicit `--output`, normal runs use `output/<scenario>` and smoothed runs use `output/<scenario>_smooth`.
+
+Run the normal performance benchmark set. This runs scenarios with category `"performance"` and writes per-scenario outputs plus `output/benchmark/benchmark.csv`:
+
+```powershell
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --benchmark-all --no-path-smoothing
+```
+
+```bash
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --benchmark-all --no-path-smoothing
+```
+
+Run the smoothed performance benchmark set and write `output/benchmark_smooth/benchmark.csv`:
+
+```powershell
+cpp\build\multi_agent_ccrrt.exe --config cpp\config\ccrrt.json --benchmark-all --path-smoothing
+```
+
+```bash
+./cpp/build/multi_agent_ccrrt --config cpp/config/ccrrt.json --benchmark-all --path-smoothing
+```

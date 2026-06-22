@@ -29,8 +29,8 @@ Environment makePerfClutteredScenario() {
         {{6.0, 14.0}, 1.2},
     };
     env.agents = {
-        makeAgent(0, 0, "agent_a", {1.0, 1.0}, {14.0, 14.0}),
-        makeAgent(1, 1, "agent_b", {14.0, 1.0}, {1.0, 14.0}),
+        makeAgent(0, 0, "red", {1.0, 1.0}, {14.0, 14.0}),
+        makeAgent(1, 1, "blue", {14.0, 1.0}, {1.0, 14.0}),
     };
     env.dynamic_obstacles = {
         makeDynamicObstacle(0, verticalPath(10.5, 0.5, 14.5, 0.2)),
@@ -49,10 +49,10 @@ Environment makePerfFourAgentsScenario() {
         {{8.5, 7.5}, 1.2},
     };
     env.agents = {
-        makeAgent(0, 0, "agent_0", {0.5, 0.5}, {14.5, 14.5}),
-        makeAgent(1, 1, "agent_1", {14.5, 0.5}, {0.5, 14.5}),
-        makeAgent(2, 2, "agent_2", {0.5, 14.5}, {14.5, 0.5}),
-        makeAgent(3, 3, "agent_3", {7.5, 0.5}, {7.5, 14.5}),
+        makeAgent(0, 0, "red", {0.5, 0.5}, {14.5, 14.5}),
+        makeAgent(1, 1, "blue", {14.5, 0.5}, {0.5, 14.5}),
+        makeAgent(2, 2, "green", {0.5, 14.5}, {14.5, 0.5}),
+        makeAgent(3, 3, "orange", {7.5, 0.5}, {7.5, 14.5}),
     };
     env.dynamic_obstacles = {
         makeDynamicObstacle(0, horizontalPath(8.0, 1.0, 14.0, 0.2)),
@@ -73,8 +73,8 @@ Environment makePerfNarrowPassageScenario() {
         {{11.0, 4.0}, 1.5},
     };
     env.agents = {
-        makeAgent(0, 0, "west", {1.0, 8.0}, {14.0, 8.0}),
-        makeAgent(1, 1, "south", {8.0, 1.0}, {8.0, 14.0}),
+        makeAgent(0, 0, "red", {1.0, 8.0}, {14.0, 8.0}),
+        makeAgent(1, 1, "blue", {8.0, 1.0}, {8.0, 14.0}),
     };
     env.dynamic_obstacles = {
         makeDynamicObstacle(0, verticalPath(8.0, 14.0, 1.0, 0.2)),
@@ -91,9 +91,9 @@ Environment makePerfLongPathsScenario() {
         {{5.0, 11.0}, 1.5},
     };
     env.agents = {
-        makeAgent(0, 0, "alpha", {0.0, 0.0}, {15.0, 15.0}),
-        makeAgent(1, 1, "beta", {15.0, 0.0}, {0.0, 15.0}),
-        makeAgent(2, 2, "gamma", {0.0, 15.0}, {15.0, 0.0}),
+        makeAgent(0, 0, "red", {0.0, 0.0}, {15.0, 15.0}),
+        makeAgent(1, 1, "blue", {15.0, 0.0}, {0.0, 15.0}),
+        makeAgent(2, 2, "green", {0.0, 15.0}, {15.0, 0.0}),
     };
     return env;
 }
@@ -107,8 +107,8 @@ Environment makePerfMultiDynamicScenario() {
         {{8.0, 10.0}, 1.5},
     };
     env.agents = {
-        makeAgent(0, 0, "north", {8.0, 1.0}, {8.0, 14.0}),
-        makeAgent(1, 1, "east", {14.0, 8.0}, {1.0, 8.0}),
+        makeAgent(0, 0, "red", {8.0, 1.0}, {8.0, 14.0}),
+        makeAgent(1, 1, "blue", {14.0, 8.0}, {1.0, 8.0}),
     };
     env.dynamic_obstacles = {
         makeDynamicObstacle(0, verticalPath(5.0, 1.0, 14.0, 0.2)),
@@ -121,7 +121,7 @@ Environment makePerfMultiDynamicScenario() {
 /** @brief Builds the combined stress benchmark from cluttered + extra traffic. */
 Environment makePerfStressScenario() {
     Environment env = makePerfClutteredScenario();
-    env.agents.push_back(makeAgent(2, 2, "agent_c", {7.5, 0.5}, {7.5, 14.5}));
+    env.agents.push_back(makeAgent(2, 2, "green", {7.5, 0.5}, {7.5, 14.5}));
     env.dynamic_obstacles.push_back(
         makeDynamicObstacle(1, horizontalPath(7.0, 0.5, 14.5, 0.2)));
     env.dynamic_obstacles.push_back(

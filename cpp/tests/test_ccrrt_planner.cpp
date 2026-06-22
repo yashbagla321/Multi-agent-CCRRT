@@ -52,6 +52,38 @@ private:
     Vec2 goal_;
 };
 
+class AlwaysSafeChecker final : public ccrrt::ICollisionChecker {
+public:
+    bool isNodeSafe(
+        const GaussianState&,
+        const std::vector<ccrrt::StaticObstacle>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        int) const override {
+        return true;
+    }
+
+    bool isEdgeSafe(
+        const Vec2&,
+        const Vec2&,
+        double,
+        const std::vector<ccrrt::StaticObstacle>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        int) const override {
+        return true;
+    }
+
+    double estimateCollisionProbability(
+        const GaussianState&,
+        const std::vector<ccrrt::StaticObstacle>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        const std::vector<ccrrt::TrajectoryPrediction>&,
+        int) const override {
+        return 0.0;
+    }
+};
+
 }  // namespace
 
 TEST(CCRRTPlanner, PlansPathInOpenEnvironment) {
@@ -108,4 +140,41 @@ TEST(CCRRTPlanner, RejectsUnsafeFinalGoalEdge) {
     const auto trajectory = planner.plan(start, goal, {}, {}, {}, 0);
 
     EXPECT_TRUE(trajectory.empty());
+}
+
+TEST(CCRRTPlanner, PathSmoothingFlagPreservesDiscreteHorizon) {
+    auto unsmoothed_config = fastTestPlannerConfig();
+    unsmoothed_config.expand_distance = 0.5;
+    unsmoothed_config.goal_sample_rate = 100;
+    unsmoothed_config.max_iterations = 20;
+    unsmoothed_config.enable_path_smoothing = false;
+
+    auto smoothed_config = unsmoothed_config;
+    smoothed_config.enable_path_smoothing = true;
+
+    const Vec2 goal{3.0, 0.0};
+    GaussianState start;
+    start.mean = {0.0, 0.0};
+    start.variance = unsmoothed_config.initial_variance;
+
+    AlwaysSafeChecker unsmoothed_checker;
+    std::mt19937 unsmoothed_rng(unsmoothed_config.rng_seed);
+    CCRRTPlanner unsmoothed_planner(unsmoothed_config, unsmoothed_checker, unsmoothed_rng);
+    const auto unsmoothed = unsmoothed_planner.plan(start, goal, {}, {}, {}, 0);
+
+    AlwaysSafeChecker smoothed_checker;
+    std::mt19937 smoothed_rng(smoothed_config.rng_seed);
+    CCRRTPlanner smoothed_planner(smoothed_config, smoothed_checker, smoothed_rng);
+    const auto smoothed = smoothed_planner.plan(start, goal, {}, {}, {}, 0);
+
+    ASSERT_FALSE(unsmoothed.empty());
+    ASSERT_FALSE(smoothed.empty());
+    EXPECT_GT(unsmoothed.nodes.size(), 2u);
+    EXPECT_EQ(smoothed.nodes.size(), unsmoothed.nodes.size());
+    EXPECT_DOUBLE_EQ(smoothed.total_cost, unsmoothed.total_cost);
+    for (std::size_t i = 0; i < smoothed.nodes.size(); ++i) {
+        EXPECT_EQ(smoothed.nodes[i].time_step, static_cast<int>(i));
+    }
+    EXPECT_NEAR(smoothed.nodes.back().position.x, goal.x, 1e-9);
+    EXPECT_NEAR(smoothed.nodes.back().position.y, goal.y, 1e-9);
 }

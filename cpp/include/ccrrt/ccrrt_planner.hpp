@@ -88,11 +88,10 @@ private:
         const std::vector<StaticObstacle>& static_obstacles) const;
 
     /**
-     * @brief Greedy shortcut smoothing: skips intermediate waypoints when a direct edge is safe.
+     * @brief Greedy shortcut smoothing that preserves one node per checked future timestep.
      */
     Trajectory shortcutSmooth(
         const Trajectory& path,
-        const Vec2& goal,
         const std::vector<StaticObstacle>& static_obstacles,
         const std::vector<TrajectoryPrediction>& agent_predictions,
         const std::vector<TrajectoryPrediction>& dynamic_predictions,

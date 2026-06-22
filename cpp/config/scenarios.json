@@ -33,7 +33,7 @@
       { "center": [13.0, 10.0], "radius": 2.0 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "green", "start": [1.0, 14.0], "goal": [14.0, 1.0] },
+      { "id": 0, "priority": 0, "name": "red",   "start": [1.0, 14.0], "goal": [14.0, 1.0] },
       { "id": 1, "priority": 1, "name": "blue",  "start": [14.0, 1.0], "goal": [1.0, 14.0] }
     ]
   },
@@ -49,7 +49,7 @@
       { "center": [13.0, 10.0], "radius": 1.5 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "green", "start": [1.0, 1.0],  "goal": [15.0, 15.0] },
+      { "id": 0, "priority": 0, "name": "red",   "start": [1.0, 1.0],  "goal": [15.0, 15.0] },
       { "id": 1, "priority": 1, "name": "blue",  "start": [15.0, 2.0], "goal": [2.0, 15.0] }
     ],
     "dynamic_obstacles": [
@@ -106,8 +106,8 @@
       { "center": [13.0, 12.0], "radius": 1.5 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "agent_a", "start": [1.0, 1.0],  "goal": [16.0, 16.0] },
-      { "id": 1, "priority": 1, "name": "agent_b", "start": [14.0, 1.0], "goal": [1.0, 14.0] }
+      { "id": 0, "priority": 0, "name": "red",  "start": [1.0, 1.0],  "goal": [16.0, 16.0] },
+      { "id": 1, "priority": 1, "name": "blue", "start": [14.0, 1.0], "goal": [1.0, 14.0] }
     ],
     "dynamic_obstacles": [
       {
@@ -128,10 +128,10 @@
       { "center": [13.0, 10.0], "radius": 2.0 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "agent_0", "start": [0.5, 0.5],   "goal": [14.5, 14.5] },
-      { "id": 1, "priority": 1, "name": "agent_1", "start": [14.5, 0.5],  "goal": [0.5, 14.5] },
-      { "id": 2, "priority": 2, "name": "agent_2", "start": [0.5, 14.5],  "goal": [14.5, 0.5] },
-      { "id": 3, "priority": 3, "name": "agent_3", "start": [7.5, -0.5],   "goal": [7.5, 14.5] }
+      { "id": 0, "priority": 0, "name": "red",    "start": [0.5, 0.5],   "goal": [14.5, 14.5] },
+      { "id": 1, "priority": 1, "name": "blue",   "start": [14.5, 0.5],  "goal": [0.5, 14.5] },
+      { "id": 2, "priority": 2, "name": "green",  "start": [0.5, 14.5],  "goal": [14.5, 0.5] },
+      { "id": 3, "priority": 3, "name": "orange", "start": [7.5, -0.5],  "goal": [7.5, 14.5] }
     ],
     "dynamic_obstacles": [
       {
@@ -155,8 +155,8 @@
       { "center": [11.0, 4.0], "radius": 1.5 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "west",  "start": [-1.0, 8.0], "goal": [16.0, 8.0] },
-      { "id": 1, "priority": 1, "name": "south", "start": [8.0, 1.0], "goal": [8.0, 14.0] }
+      { "id": 0, "priority": 0, "name": "red",  "start": [-1.0, 8.0], "goal": [16.0, 8.0] },
+      { "id": 1, "priority": 1, "name": "blue", "start": [8.0, 1.0],  "goal": [8.0, 14.0] }
     ],
     "dynamic_obstacles": [
       {
@@ -177,9 +177,9 @@
       { "center": [5.0, 11.0], "radius": 1.5 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "alpha", "start": [0.0, 0.0],  "goal": [15.0, 15.0] },
-      { "id": 1, "priority": 1, "name": "beta",  "start": [15.0, 0.0], "goal": [0.0, 15.0] },
-      { "id": 2, "priority": 2, "name": "gamma", "start": [0.0, 15.0], "goal": [15.0, 0.0] }
+      { "id": 0, "priority": 0, "name": "red",   "start": [0.0, 0.0],  "goal": [15.0, 15.0] },
+      { "id": 1, "priority": 1, "name": "blue",  "start": [15.0, 0.0], "goal": [0.0, 15.0] },
+      { "id": 2, "priority": 2, "name": "green", "start": [0.0, 15.0], "goal": [15.0, 0.0] }
     ]
   },
 
@@ -193,8 +193,8 @@
       { "center": [8.0, 11.0], "radius": 1.5 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "north", "start": [8.0, 1.0],  "goal": [8.0, 15.0] },
-      { "id": 1, "priority": 1, "name": "east",  "start": [14.0, 8.0], "goal": [0.0, 5.0] }
+      { "id": 0, "priority": 0, "name": "red",  "start": [8.0, 1.0],  "goal": [8.0, 15.0] },
+      { "id": 1, "priority": 1, "name": "blue", "start": [14.0, 8.0], "goal": [0.0, 5.0] }
     ],
     "dynamic_obstacles": [
       {
@@ -232,9 +232,9 @@
       { "center": [6.0, 14.0], "radius": 1.2 }
     ],
     "agents": [
-      { "id": 0, "priority": 0, "name": "agent_a", "start": [1.0, 1.0],  "goal": [16.0, 16.0] },
-      { "id": 1, "priority": 1, "name": "agent_b", "start": [14.0, 1.0], "goal": [-1.0, 15.0] },
-      { "id": 2, "priority": 2, "name": "agent_c", "start": [7.5, -1.0],  "goal": [7.5, 17.0] }
+      { "id": 0, "priority": 0, "name": "red",   "start": [1.0, 1.0],  "goal": [16.0, 16.0] },
+      { "id": 1, "priority": 1, "name": "blue",  "start": [14.0, 1.0], "goal": [-1.0, 15.0] },
+      { "id": 2, "priority": 2, "name": "green", "start": [7.5, -1.0], "goal": [7.5, 17.0] }
     ],
     "dynamic_obstacles": [
       {

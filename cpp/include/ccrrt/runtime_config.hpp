@@ -22,6 +22,9 @@ struct RunSettings {
     std::string output_directory;
     bool list_scenarios = false;
     bool benchmark_all = false;
+    bool run_all = false;
+    bool run_all_normal = false;
+    bool run_all_smooth = false;
     bool python_compat = false;
     std::string loaded_config_path;
 };

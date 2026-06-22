@@ -108,6 +108,15 @@ void parseRunSettings(const json& root, RunSettings& run) {
     if (root.contains("benchmark_all")) {
         run.benchmark_all = root["benchmark_all"].get<bool>();
     }
+    if (root.contains("run_all")) {
+        run.run_all = root["run_all"].get<bool>();
+    }
+    if (root.contains("run_all_normal")) {
+        run.run_all_normal = root["run_all_normal"].get<bool>();
+    }
+    if (root.contains("run_all_smooth")) {
+        run.run_all_smooth = root["run_all_smooth"].get<bool>();
+    }
     if (root.contains("python_compat")) {
         run.python_compat = root["python_compat"].get<bool>();
     }
@@ -397,12 +406,31 @@ std::string resolveConfigFilePath(int argc, char* argv[], bool& explicit_path_ou
 void applyCommandLineOverrides(AppConfig& config, int argc, char* argv[]) {
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
+        if (arg == "--python-compat") {
+            config.planner = pythonCompatPlannerConfig();
+            config.run.python_compat = true;
+        } else if (
+            (arg == "--scenario" || arg == "--output" || arg == "--seed" ||
+             arg == "--mc-samples" || arg == "--config") &&
+            i + 1 < argc) {
+            ++i;
+        }
+    }
+
+    for (int i = 1; i < argc; ++i) {
+        const std::string arg = argv[i];
         if (arg == "--scenario" && i + 1 < argc) {
             config.run.scenario = argv[++i];
         } else if (arg == "--list-scenarios") {
             config.run.list_scenarios = true;
         } else if (arg == "--benchmark-all") {
             config.run.benchmark_all = true;
+        } else if (arg == "--run-all") {
+            config.run.run_all = true;
+        } else if (arg == "--run-all-normal") {
+            config.run.run_all_normal = true;
+        } else if (arg == "--run-all-smooth") {
+            config.run.run_all_smooth = true;
         } else if (arg == "--output" && i + 1 < argc) {
             config.run.output_directory = argv[++i];
         } else if (arg == "--seed" && i + 1 < argc) {
@@ -411,9 +439,10 @@ void applyCommandLineOverrides(AppConfig& config, int argc, char* argv[]) {
             config.planner.mc_samples = std::stoi(argv[++i]);
         } else if (arg == "--path-smoothing") {
             config.planner.enable_path_smoothing = true;
+        } else if (arg == "--no-path-smoothing") {
+            config.planner.enable_path_smoothing = false;
         } else if (arg == "--python-compat") {
-            config.planner = pythonCompatPlannerConfig();
-            config.run.python_compat = true;
+            continue;
         } else if (arg == "--config" && i + 1 < argc) {
             ++i;
         }

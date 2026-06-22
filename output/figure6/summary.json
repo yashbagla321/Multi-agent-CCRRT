@@ -1,0 +1,18 @@
+{
+  "scenario": "figure6",
+  "success": true,
+  "replan_count": 24,
+  "elapsed_ms": 28732.7290,
+  "total_steps": 280,
+  "max_timestep": 153,
+  "agents": [
+    {
+      "agent_index": 0,
+      "steps": 126
+    },
+    {
+      "agent_index": 1,
+      "steps": 154
+    }
+  ]
+}

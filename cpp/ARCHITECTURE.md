@@ -101,6 +101,8 @@ flowchart LR
 | Section 4.2.1 - Lazy check | `MultiAgentPlanner::lazyCheck` |
 | Section 5 - Simulations | `config/scenarios.json` |
 
+Path smoothing is an optional post-processing step inside `CCRRTPlanner`: it greedily shortcuts geometry only after validating the full discrete span with `isSpanEdgeSafe`. The returned path keeps one node per future timestep, preserving prediction timing for higher-priority agents, dynamic obstacles, replay covariance, and collision-risk visualization.
+
 ## Build Targets
 
 | Target | Contents |

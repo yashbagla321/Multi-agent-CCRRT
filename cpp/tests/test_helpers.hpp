@@ -34,7 +34,7 @@ inline Environment singleAgentEnvironment(Vec2 start, Vec2 goal) {
     AgentSpec agent;
     agent.id = 0;
     agent.priority = 0;
-    agent.name = "solo";
+    agent.name = "red";
     agent.start = start;
     agent.goal = goal;
     env.agents = {agent};
@@ -46,13 +46,13 @@ inline Environment twoAgentOpenEnvironment() {
     AgentSpec a;
     a.id = 0;
     a.priority = 0;
-    a.name = "a";
+    a.name = "red";
     a.start = {1.0, 1.0};
     a.goal = {9.0, 9.0};
     AgentSpec b;
     b.id = 1;
     b.priority = 1;
-    b.name = "b";
+    b.name = "blue";
     b.start = {9.0, 1.0};
     b.goal = {1.0, 9.0};
     env.agents = {a, b};
@@ -65,7 +65,7 @@ inline Environment blockedGoalEnvironment() {
     AgentSpec agent;
     agent.id = 0;
     agent.priority = 0;
-    agent.name = "blocked";
+    agent.name = "red";
     agent.start = {1.0, 1.0};
     agent.goal = {9.0, 9.0};
     env.agents = {agent};

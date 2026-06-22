@@ -19,6 +19,8 @@
 - Added `replay_frames.json` export for active receding-horizon plans, future covariance, and collision risk over time.
 - Added replay panels for per-agent current/next collision probability and run summary metrics.
 - Added right-side replay information rail so Agents and Summary stay visible without covering the map.
+- Final executed robot states now snap to the goal once the planner reaches the goal threshold, so replay paths do not stop one node short.
+- Replay colors and the Agents panel now follow scenario priority order instead of raw agent ids, and the panel labels agents as priority 1, 2, 3, etc.
 - Replay folders now contain `trajectories.csv`, `summary.json`, `scenario.json`, and `replay_frames.json`.
 
 ### Planner and collision checking
@@ -30,6 +32,12 @@
 - Improved Monte Carlo edge checks against higher-priority agent and dynamic-obstacle broadcast segments.
 - Added `max_timesteps` to `PlannerConfig`.
 - `MultiAgentPlanner` can switch between Monte Carlo and legacy collision checkers at runtime.
+- Wired `enable_path_smoothing` into returned planner trajectories and added regression coverage for CLI flag overrides.
+- Path smoothing now keeps discrete future timesteps while shortcutting geometry, preserving chance-check timing for predictions.
+- Added `--run-all` to run every scenario in normal and smoothed modes, with separate `_smooth` output folders and benchmark summaries.
+- Added `--run-all-normal` and `--run-all-smooth` for separate normal-only and smoothing-only scenario sweeps.
+- Added `--no-path-smoothing`; default output folders now separate normal `output/<scenario>` and smoothed `output/<scenario>_smooth` runs.
+- Standardized scenario agent labels to the visualization color order: red, blue, green, orange.
 
 ### Documentation
 
